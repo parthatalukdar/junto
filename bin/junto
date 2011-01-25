@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [ $# -ne 1 ];
+then
+  echo "Junto 1.0" 
+  echo "Usage: bin/junto <config_file>"
+  echo "example: bin/junto examples/simple/simple_config"
+  exit 1;
+fi;
+
+# sets environment variables
+JARS=`echo $JUNTO_DIR/lib/*.jar $JUNTO_DIR/output/*.jar | tr ' ' ':'`
+CP=${JUNTO_DIR}/output/classes:${JARS}:$CLASSPATH
+
+if [ -z $JAVA_MEM_FLAG ] 
+then
+    JAVA_MEM_FLAG=-Xmx2g
+fi
+
+JAVA_COMMAND="java $JAVA_MEM_FLAG -classpath $CP"
+
+CLASS=upenn.junto.app.ConfigRunner;
+
+$JAVA_COMMAND $CLASS $*

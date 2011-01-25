@@ -1,0 +1,152 @@
+----------------------------------------------------------
+The Junto Label Propagation Toolkit
+
+Author: Partha Pratim Talukdar (partha@talukdar.net)
+Contributors: Jason Baldridge (jbaldrid@mail.utexas.edu)
+----------------------------------------------------------
+
+
+Introduction
+============
+
+This package provides an implementation of the Adsorption and 
+Modified Adsorption (MAD) algorithms described in the following 
+papers.
+
+  Weakly Supervised Acquisition of Labeled Class Instances using Graph
+  Random Walks. Talukdar et al., EMNLP 2008
+  
+  New Regularized Algorithms for Transductive Learning. Partha Pratim
+  Talukdar, Koby Crammer, ECML-PKDD 2009
+  
+  Experiments in Graph-based Semi-Supervised Learning Methods for
+  Class-Instance Acquisition. Partha Pratim Talukdar, Fernando Pereira,
+  ACL 2010
+
+Please cite Talukdar and Crammer (2009) and/or Talukdar and Pereira
+(2010) if you use this library.
+
+Additionally, LP_ZGL, one of the first label propagation algorithms 
+is also implemented.
+
+  Xiaojin Zhu and Zoubin Ghahramani. Learning from labeled and
+  unlabeled data with label propagation.  Technical Report
+  CMU-CALD-02-107, Carnegie Mellon University, 2002.
+
+
+This file contains the configuration and build instructions. 
+
+
+Requirements
+============
+
+* Version 1.6 of the Java 2 SDK (http://java.sun.com)
+
+
+Configuring your environment variables
+======================================
+
+The easiest thing to do is to set the environment variables JAVA_HOME
+and JUNTO_DIR to the relevant locations on your system. Set JAVA_HOME
+to match the top level directory containing the Java installation you
+want to use.
+
+For example, on Windows:
+
+C:\> set JAVA_HOME=C:\Program Files\jdk1.5.0_04
+
+or on Unix:
+
+% setenv JAVA_HOME /usr/local/java
+  (csh)
+> export JAVA_HOME=/usr/java
+  (ksh, bash)
+
+On Windows, to get these settings to persist, it's actually easiest to
+set your environment variables through the System Properties from the
+Control Panel. For example, under WinXP, go to Control Panel, click on
+System Properties, choose the Advanced tab, click on Environment
+Variables, and add your settings in the User variables area.
+
+Next, likewise set JUNTO_DIR to be the top level directory where you
+unzipped the download. In Unix, type 'pwd' in the directory where
+this file is and use the path given to you by the shell as
+JUNTO_DIR.  You can set this in the same manner as for JAVA_HOME
+above.
+
+Next, add the directory JUNTO_DIR/bin to your path. For example, you
+can set the path in your .bashrc file as follows:
+
+export PATH="$PATH:$JUNTO_DIR/bin"
+
+On Windows, you should also add the python main directory to your path.
+
+Once you have taken care of these three things, you should be able to
+build and use the Junto Library.
+
+Note: Spaces are allowed in JAVA_HOME but not in JUNTO_DIR.  To set
+an environment variable with spaces in it, you need to put quotes around
+the value when on Unix, but you must *NOT* do this when under Windows.
+
+
+Building the system from source
+===============================
+
+The Junto build system is based on Apache Ant.  Ant is a little but very
+handy tool that uses a build file written in XML (build.xml) as building
+instructions.  Building the Java portion of Junto is accomplished using the
+script `ant'; this works under Windows and Unix, but requires that
+you run it from the top-level directory (where the build.xml file is
+located).  If everything is right and all the required packages are
+visible, this action will generate a file called junto.jar in the
+./output directory.
+
+
+Build targets
+=============
+
+These are the meaningful targets for the main build file:
+
+  package  --> generates the junto.jar file 
+  compile  --> compiles the source code (default)
+  javadoc  --> generates the API documentation
+  clean    --> cleans up the compilation directory
+
+There are also build files in each sample grammar directory.
+
+To learn the details of what each target does, read the build.xml file.
+It is quite understandable.
+
+If you create the javadocs (with "ant javadoc"), you can point your
+browser to ./docs/api/index.html to look at the Junto API.
+
+
+Trying it out
+=============
+
+If you've managed to configure and build the system, you should be 
+able to run:
+
+$ bin/junto examples/simple/simple_config
+
+Please look into the examples/simple/simple_config file for various 
+options available. Sample (dummy) data is made available in the 
+examples/simple/data directory.
+
+
+Bug Reports
+===========
+
+Please report bugs on the Google code site: 
+
+  http://code.google.com/p/junto/
+
+
+Special Note
+============
+
+Parts of this README and some of the directory structure and the build
+system for this project were borrowed from the JDOM project (kudos!).
+See www.jdom.org for more details.
+
+
