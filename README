@@ -139,9 +139,9 @@ Trying it out
 =============
 
 If you've managed to configure and build the system, you should be 
-able to run:
+able to go to $JUNTO_DIR/examples/simple and run:
 
-$ bin/junto examples/simple/simple_config
+$ junto simple_config
 
 Please look into the examples/simple/simple_config file for various 
 options available. Sample (dummy) data is made available in the 

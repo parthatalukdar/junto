@@ -4,22 +4,22 @@
 # edge in the graph. For example,
 # <source_node>TAB<target_node>TAB<edge_weight>
 #
-graph_file = examples/simple/data/input_graph
+graph_file = data/input_graph
 data_format = edge_factored
 
 # Specifies the seed label information to be injected into
 # selected nodes at the start of the algorithm.
-seed_file = examples/simple/data/seeds
+seed_file = data/seeds
 
 # Gold labels of nodes (if known). This gold label information
 # is used only during evaluation.
-gold_labels_file = examples/simple/data/gold_labels
+gold_labels_file = data/gold_labels
 
 # Nodes (along with corresponding gold label information) which
 # are used during evaluation, if any. This is kept as separate
 # option from the gold_labels_file, as we may not evaluate all
 # nodes whose gold label information is known. 
-test_file = examples/simple/data/gold_labels
+test_file = data/gold_labels
 
 # Number of label propagation rounds
 iters = 10
@@ -50,4 +50,4 @@ beta = 2
 # For nodes for which gold (or seed label) information is not known, the corresponding
 # field is left empty.
 #
-output_file = examples/simple/data/label_prop_output
+output_file = data/label_prop_output
