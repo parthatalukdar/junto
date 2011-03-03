@@ -1,8 +1,11 @@
 # use glob syntax.
 syntax: glob
 
-output
+output/
 netbeans
 *.gz
-api
 tmp
+target/
+lib_managed/
+src_managed/
+project/boot/

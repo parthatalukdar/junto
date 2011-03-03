@@ -10,7 +10,7 @@
     <property name="Name" value="Junto"/>
     <property name="name" value="junto"/>
     <property name="year" value="2011"/>
-    <property name="version" value="1.0"/>
+    <property name="version" value="1.1"/>
 
     <echo message="----------- ${Name} ${version} [${year}] ------------"/>
 
@@ -19,7 +19,7 @@
     <property name="deprecation" value="on"/>
 
     <property name="top.dir" value="."/>
-    <property name="src.dir" value="./src/java"/>
+    <property name="src.dir" value="./src/main/java"/>
     <property name="bin.dir" value="./bin"/>
     <property name="lib.dir" value="./lib"/>
     <property name="docs.dir" value="./docs"/>
