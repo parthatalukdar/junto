@@ -111,7 +111,10 @@ structure.  To build Junto, type:
 
 $ junto build compile
 
-This will compile the source files and put them in ./target/classes.
+This will compile the source files and put them in
+./target/classes. If this is your first time running it, you will see
+messages about Scala being dowloaded -- this is fine and
+expected. Once that is over, the Junto code will be compiled.
 
 To try out other build targets, do:
 
