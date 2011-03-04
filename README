@@ -106,33 +106,21 @@ the value when on Unix, but you must *NOT* do this when under Windows.
 Building the system from source
 ===============================
 
-The Junto build system is based on Apache Ant.  Ant is a little but very
-handy tool that uses a build file written in XML (build.xml) as building
-instructions.  Building the Java portion of Junto is accomplished using the
-script `ant'; this works under Windows and Unix, but requires that
-you run it from the top-level directory (where the build.xml file is
-located).  If everything is right and all the required packages are
-visible, this action will generate a file called junto.jar in the
-./output directory.
+Junto uses SBT (Simple Build Tool) with a standard directory
+structure.  To build Junto, type:
 
+$ junto build compile
 
-Build targets
-=============
+This will compile the source files and put them in ./target/classes.
 
-These are the meaningful targets for the main build file:
+To try out other build targets, do:
 
-  package  --> generates the junto.jar file 
-  compile  --> compiles the source code (default)
-  javadoc  --> generates the API documentation
-  clean    --> cleans up the compilation directory
+$ junto build
 
-There are also build files in each sample grammar directory.
+This will drop you into the SBT interface.  The build targets that are
+supported are listeded here:
 
-To learn the details of what each target does, read the build.xml file.
-It is quite understandable.
-
-If you create the javadocs (with "ant javadoc"), you can point your
-browser to ./docs/api/index.html to look at the Junto API.
+http://code.google.com/p/simple-build-tool/wiki/RunningSbt
 
 
 Trying it out
@@ -141,7 +129,7 @@ Trying it out
 If you've managed to configure and build the system, you should be 
 able to go to $JUNTO_DIR/examples/simple and run:
 
-$ junto simple_config
+$ junto config simple_config
 
 Please look into the examples/simple/simple_config file for various 
 options available. Sample (dummy) data is made available in the 
@@ -154,13 +142,5 @@ Bug Reports
 Please report bugs on the Google code site: 
 
   http://code.google.com/p/junto/
-
-
-Special Note
-============
-
-Parts of this README and some of the directory structure and the build
-system for this project were borrowed from the JDOM project (kudos!).
-See www.jdom.org for more details.
 
 

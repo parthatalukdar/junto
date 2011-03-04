@@ -1,16 +1,8 @@
 #!/bin/bash
 
-if [ $# -ne 1 ];
-then
-  echo "Junto 1.0" 
-  echo "Usage: bin/junto <config_file>"
-  echo "example: bin/junto examples/simple/simple_config"
-  exit 1;
-fi;
+JARS=`echo $JUNTO_DIR/lib/*.jar $JUNTO_DIR/target/*.jar | tr ' ' ':'`
 
-# sets environment variables
-JARS=`echo $JUNTO_DIR/lib/*.jar $JUNTO_DIR/output/*.jar | tr ' ' ':'`
-CP=${JUNTO_DIR}/output/classes:${JARS}:$CLASSPATH
+CP=$JUNTO_DIR/target/classes:$JARS:$CLASSPATH
 
 if [ -z $JAVA_MEM_FLAG ] 
 then
@@ -19,6 +11,39 @@ fi
 
 JAVA_COMMAND="java $JAVA_MEM_FLAG -classpath $CP"
 
-CLASS=upenn.junto.app.ConfigRunner;
+CMD=$1
+shift
 
-$JAVA_COMMAND $CLASS $*
+help()
+{
+cat <<EOF
+Junto 1.1 commands: 
+
+  config  	run Junto on the specified config file
+  build         build Junto with SBT
+  run           run the main method of a given class
+
+Include --help with any option for more information
+EOF
+}
+
+if [ $CMD = 'build' ]; then
+
+    $JAVA_COMMAND -jar $JUNTO_DIR/lib/sbt-launch-0.7.4.jar "$@"
+
+else 
+
+    CLASS=
+
+    case $CMD in
+	config) CLASS=upenn.junto.app.ConfigRunner;;
+	run) CLASS=$1; shift;;
+	help) help; exit 1;;
+	*) echo "Unrecognized command: $CMD"; help; exit 1;;
+    esac
+
+    $JAVA_COMMAND $CLASS $*
+
+fi
+
+
