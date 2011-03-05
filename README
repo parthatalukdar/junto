@@ -122,6 +122,9 @@ supported are listeded here:
 
 http://code.google.com/p/simple-build-tool/wiki/RunningSbt
 
+Note: if you have SBT already installed on your system, you can also
+just call it directly with "sbt".
+
 
 Trying it out
 =============
