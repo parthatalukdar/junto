@@ -26,7 +26,6 @@ import org.clapper.argot._
  * Read Junto output to get distributions for just words, and only
  * for labels that have higher probability than __DUMMY__.
  */
-
 object OutputExtractor {
 
   val NodeRE = """([^_]+)_(.+)""".r
@@ -66,7 +65,7 @@ object OutputExtractor {
       val Array(nodename, gold, injected, estimated, isTestNode, mrr) = line.split('\t')
       val NodeRE(nodetype,nodeval) = nodename
       
-      if (nodetype == "WORD" && estimated != "") {
+      if (nodetype == typeToExtract && estimated != "") {
         val estimatedList = estimated.split(" ")
         val (tags,probs) = 
           (for (i <- List.range(0,estimatedList.length,2)) 
