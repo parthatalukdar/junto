@@ -1,8 +1,9 @@
 #!/bin/bash
 
-JARS=`echo $JUNTO_DIR/lib/*.jar $JUNTO_DIR/target/*.jar | tr ' ' ':'`
+JARS=`echo $JUNTO_DIR/lib/*.jar $JUNTO_DIR/target/*.jar $JUNTO_DIR/lib_managed/compile/*.jar | tr ' ' ':'`
+SCALA_LIB="$JUNTO_DIR/project/boot/scala-2.8.1/lib/scala-library.jar"
 
-CP=$JUNTO_DIR/target/classes:$JARS:$CLASSPATH
+CP=$JUNTO_DIR/target/classes:$JARS:$SCALA_LIB:$CLASSPATH
 
 if [ -z $JAVA_MEM_FLAG ] 
 then
@@ -19,8 +20,9 @@ help()
 cat <<EOF
 Junto 1.1 commands: 
 
-  config  	run Junto on the specified config file
   build         build Junto with SBT
+  config  	run Junto on the specified config file
+  extract       extract distributions from Junto output
   run           run the main method of a given class
 
 Include --help with any option for more information
@@ -29,7 +31,7 @@ EOF
 
 if [ $CMD = 'build' ]; then
 
-    $JAVA_COMMAND -jar $JUNTO_DIR/lib/sbt-launch-0.7.4.jar "$@"
+    java -jar $JUNTO_DIR/project/build/sbt-launch-0.7.4.jar "$@"
 
 else 
 
@@ -37,6 +39,7 @@ else
 
     case $CMD in
 	config) CLASS=upenn.junto.app.ConfigRunner;;
+	extract) CLASS=upenn.junto.app.OutputExtractor;;
 	run) CLASS=$1; shift;;
 	help) help; exit 1;;
 	*) echo "Unrecognized command: $CMD"; help; exit 1;;
