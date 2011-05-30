@@ -32,7 +32,7 @@ object OutputExtractor {
 
   // Set up the options parser
   import ArgotConverters._
-  val parser = new ArgotParser("Junto Output Extractor", preUsage=Some("Junto 1.1"))
+  val parser = new ArgotParser("Junto Output Extractor", preUsage=Some("Junto"))
 
   val typeToExtractOption = 
     parser.multiOption[String](List("t", "type"), "nodetype",
@@ -51,7 +51,7 @@ object OutputExtractor {
    */
   def main(args: Array[String]) = {
     try { parser.parse(args) }
-    catch { case e: ArgotUsageException => println(e.message); exit(0) }
+    catch { case e: ArgotUsageException => println(e.message); sys.exit(0) }
 
     val typesToExtract = typeToExtractOption.value toSet
     val doAllNodeTypes = typesToExtract isEmpty

@@ -31,7 +31,7 @@ EOF
 
 if [ $CMD = 'build' ]; then
 
-    java -jar $JUNTO_DIR/project/build/sbt-launch-0.7.4.jar "$@"
+    java -jar $JUNTO_DIR/project/build/sbt-launch-0.7.7.jar "$@"
 
 else 
 
