@@ -18,7 +18,7 @@ package upenn.junto.test
 
 import java.io._
 import io.Source
-import upenn.junto.data._
+import upenn.junto.config._
 
 class PrepInfo (val id: String,   val verb: String, val noun: String, 
                 val prep: String, val pobj: String, val label: String)

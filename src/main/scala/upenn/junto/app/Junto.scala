@@ -61,7 +61,7 @@ object JuntoConfigRunner {
     println(CollectionUtil.Map2StringPrettyPrint(config))
 		
     // load the graph
-    val g = GraphConfigLoader(config)
+    val graph = GraphConfigLoader(config)
 
     val maxIters = Integer.parseInt(config.get("iters"))
 
@@ -84,13 +84,13 @@ object JuntoConfigRunner {
     // decide on the algorithm to use
     val algo = Defaults.GetValueOrDefault(config.get("algo"), "adsorption")
 
-    JuntoRunner(algo, g, maxIters, mu1, mu2, mu3, keepTopKLabels,
+    JuntoRunner(algo, graph, maxIters, mu1, mu2, mu3, keepTopKLabels,
                 useBipartiteOptimization, verbose, resultList)
 		
     if (config.containsKey("output_file") && (config.get("output_file")).length > 0)
-      g.SaveEstimatedScores(config.get("output_file"))
+      graph.SaveEstimatedScores(config.get("output_file"))
     else if (config.containsKey("output_base") && (config.get("output_base")).length > 0)
-      g.SaveEstimatedScores(config.get("output_base") + ".mu2_" + mu2 + ".mu3_" + mu3)
+      graph.SaveEstimatedScores(config.get("output_base") + ".mu2_" + mu2 + ".mu3_" + mu3)
 
   }
 

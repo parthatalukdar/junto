@@ -1,4 +1,4 @@
-package upenn.junto.data
+package upenn.junto.config
 
 /**
  * Copyright 2011 Jason Baldridge
