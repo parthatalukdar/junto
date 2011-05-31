@@ -29,8 +29,6 @@ object GraphConfigLoader {
 		
     println("Going to build graph ...")
 
-    val dataFormat = Defaults.GetValueOrDefault(config.get("data_format"), "edge_factored")
-
     // this is used mostly for the data received from Mark, i.e.
     // for information extraction machine learning work.
     val maxSeedsPerClass = 
@@ -39,36 +37,20 @@ object GraphConfigLoader {
     val beta = Defaults.GetValueOrDefault(config.get("beta"), 2.0)
     val isDirected = Defaults.GetValueOrDefault(config.get("is_directed"), false)
 
-    dataFormat match {
-      // edge factored representation is mostly used for the
-      // information integration work.
-      case "edge_factored" => {
-        EdgeFactoredGraphBuilder(graph,
-                                 config.get("graph_file"),
-                                 config.get("seed_file"),
-                                 maxSeedsPerClass,
-                                 config.get("test_file"),           /* can be null */
-                                 config.get("source_freq_file"),    /* can be null */
-                                 config.get("target_filter_file"),  /* can be null */
-                                 config.get("prune_threshold"),
-                                 beta,
-                                 isDirected)
+    EdgeFactoredGraphBuilder(graph,
+                             config.get("graph_file"),
+                             config.get("seed_file"),
+                             maxSeedsPerClass,
+                             config.get("test_file"),           /* can be null */
+                             config.get("source_freq_file"),    /* can be null */
+                             config.get("target_filter_file"),  /* can be null */
+                             config.get("prune_threshold"),
+                             beta,
+                             isDirected)
 			
-        // gold labels for some or all of the nodes 
-        if (config.containsKey("gold_labels_file"))
-          graph.SetGoldLabels(config.get("gold_labels_file"))
-      }
-      case "node_factored" => {
-        BuildGraphFromNodeFactoredData.Build(graph,
-                                             config.get("graph_file"),
-                                             config.get("seed_file"),
-                                             maxSeedsPerClass,
-                                             config.get("test_file"),
-                                             beta,
-                                             isDirected)
-      }
-      case _ => throw new RuntimeException("Data format " + dataFormat + " not recognized.")
-    }
+    // gold labels for some or all of the nodes 
+    if (config.containsKey("gold_labels_file"))
+      graph.SetGoldLabels(config.get("gold_labels_file"))
 		
     // set Gaussian Kernel weights, if requested. In this case, we assume that existing
     // edge weights are distance squared i.e. || x_i - x_j ||^2  
