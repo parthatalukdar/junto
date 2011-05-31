@@ -126,7 +126,7 @@ public class ConfigTuner {
         System.setErr(ps);
 			
         results.add(new ArrayList());
-        ConfigRunner.Run(c, results.get(results.size() - 1));
+        JuntoConfigRunner.apply(c, results.get(results.size() - 1));
         UpdateBestConfig((String) c.get("algo"), algo2BestScore,
                          algo2BestConfig, c, results.get(results.size() - 1));
 
@@ -159,7 +159,7 @@ public class ConfigTuner {
 				
         // add additional config options from the file to the tuned params
         finalTestConfig = ConfigReader.read_config(finalTestConfig, finalTestConfigFile);
-        ConfigRunner.Run(finalTestConfig, null);
+        JuntoConfigRunner.apply(finalTestConfig, null);
       }
     }
   }

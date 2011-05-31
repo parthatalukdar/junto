@@ -11,13 +11,13 @@ import java.util.StringTokenizer;
 
 public class ConfigReader {
 	
-  public static Hashtable read_config(String fName) {
-    Hashtable retval = new Hashtable(50);
+  public static Hashtable<String,String> read_config(String fName) {
+    Hashtable<String,String> retval = new Hashtable<String,String>(50);
     return (read_config(retval, fName));
   }
 
   @SuppressWarnings("unchecked")
-    public static Hashtable read_config(Hashtable retval, String fName) {
+    public static Hashtable<String,String> read_config(Hashtable<String,String> retval, String fName) {
     try {
       // File reading preparation
       FileInputStream fis = new FileInputStream(fName);
@@ -72,8 +72,8 @@ public class ConfigReader {
     return retval;
   }
 	
-  public static Hashtable read_config(String[] args) {
-    Hashtable retVal = read_config(args[0]);
+  public static Hashtable<String,String> read_config(String[] args) {
+    Hashtable<String,String> retVal = read_config(args[0]);
 		
     for (int ai = 1; ai < args.length; ++ai) {
       String[] parts = args[ai].split("=");
@@ -89,7 +89,7 @@ public class ConfigReader {
     return (retVal);
   }
 	
-  public static void AppendOptionValue(Hashtable config,
+  public static void AppendOptionValue(Hashtable<String,String> config,
                                        String key,
                                        String appendValue) {
     if (!config.containsKey(key)) {

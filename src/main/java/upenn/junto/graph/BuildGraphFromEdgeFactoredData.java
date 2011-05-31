@@ -56,8 +56,11 @@ public class BuildGraphFromEdgeFactoredData {
     return (g);
   }
 	
-  public static Graph BuildInstanceMultiLine(Graph g, String fileName,
-                                             String srcFilterFile, String trgFilterFile, String pruneThresholdStr,
+  public static Graph BuildInstanceMultiLine(Graph g, 
+                                             String fileName,
+                                             String srcFilterFile, 
+                                             String trgFilterFile, 
+                                             String pruneThresholdStr,
                                              boolean isDirected) {
     try {
       int pruneThreshold = Integer.parseInt(pruneThresholdStr);

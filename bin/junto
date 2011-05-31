@@ -38,7 +38,7 @@ else
     CLASS=
 
     case $CMD in
-	config) CLASS=upenn.junto.app.ConfigRunner;;
+	config) CLASS=upenn.junto.app.JuntoConfigRunner;;
 	extract) CLASS=upenn.junto.app.OutputExtractor;;
 	run) CLASS=$1; shift;;
 	help) help; exit 1;;
