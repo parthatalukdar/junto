@@ -89,15 +89,4 @@ public class ConfigReader {
     return (retVal);
   }
 	
-  public static void AppendOptionValue(Hashtable<String,String> config,
-                                       String key,
-                                       String appendValue) {
-    if (!config.containsKey(key)) {
-      MessagePrinter.PrintAndDie("config doesn't contain key: " + key);
-    }
-    String currVal = (String) config.get(key);
-    config.put(key, currVal + appendValue);
-		
-    MessagePrinter.Print("Updated " + key + " = " + config.get(key));
-  }
 }

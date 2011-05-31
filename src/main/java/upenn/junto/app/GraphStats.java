@@ -1,4 +1,4 @@
-package upenn.junto.graph;
+package upenn.junto.app;
 
 import gnu.trove.TObjectIntHashMap;
 
@@ -11,6 +11,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
+import upenn.junto.graph.*;
 import upenn.junto.util.MessagePrinter;
 
 import org.jgrapht.GraphPath;
@@ -136,7 +137,7 @@ public class GraphStats {
     Hashtable config = ConfigReader.read_config(args);
 
     // load the graph
-    Graph g = GraphLoader.LoadGraph(config);
+    Graph g = GraphConfigLoader.apply(config);
     MessagePrinter.Print(PrintStats(g));
   }
 }
