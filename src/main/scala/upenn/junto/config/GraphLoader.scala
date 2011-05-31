@@ -176,11 +176,6 @@ object EdgeFactoredGraphBuilder {
         else null
       }
 
-      val trgValFilter = {
-        if   (trgFilterFile != null) loadFilterFile(trgFilterFile)
-        else null
-      }
-      
       for (line <- Source fromFile(filename) getLines) {
         totalProcessed += 1
 
@@ -193,14 +188,14 @@ object EdgeFactoredGraphBuilder {
         
         // if source frequency filter is to be applied and the current source
         // node is not present in the map, then skip current edge.
-        if (srcFilterFile != null && !srcValAlphabet.containsKey(srcNodeNameStr)) {
+        if (srcFilterFile != null && !srcValAlphabet.contains(srcNodeNameStr)) {
 
           totalSkipped += 1
 
         } else {
 				
 	  val srcNodeName = {
-            if   (srcValAlphabet != null) Integer.toString(srcValAlphabet.get(srcNodeNameStr))
+            if   (srcValAlphabet != null) Integer.toString(srcValAlphabet(srcNodeNameStr))
             else srcNodeNameStr
           }
 					
@@ -284,10 +279,10 @@ object EdgeFactoredGraphBuilder {
     println("Total " + cnt + " nodes marked as test nodes!")
   }
 
-  def loadValAlphabetFile (filename: String, freqThreshold: Int): TObjectIntHashMap[String] = {
-    val retMap = new TObjectIntHashMap[String]
-
+  def loadValAlphabetFile (filename: String, freqThreshold: Int) = {
+    val retMap = new scala.collection.mutable.HashMap[String,Int]
     var lineNum = 0
+    
     for (line <- Source fromFile(filename) getLines) {
       lineNum += 1
       val Array(valCount, valString) = line.trim split("\t")
@@ -298,15 +293,5 @@ object EdgeFactoredGraphBuilder {
     println("Total " + retMap.size + " loaded from " + filename);
     retMap
   }
-
-  def loadFilterFile (filterFile: String) = {
-    val retSet = new java.util.HashSet[String]
-    for (line <- Source fromFile(filterFile) getLines)
-      retSet.add(line)
-
-    System.out.println("Total " + retSet.size + " loaded from " + filterFile)
-    retSet
-  }
-
 
 }
