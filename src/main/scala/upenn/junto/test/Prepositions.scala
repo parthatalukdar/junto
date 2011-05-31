@@ -47,8 +47,8 @@ object PrepAttachTest {
     }).toList.flatten
   }
 
-  def createSeeds (info: List[PrepInfo]): List[Seed] =
-    info map { item => SeedCreator(idNode(item.id), verbNode(item.label)) }
+  def createSeeds (info: List[PrepInfo]): List[Label] =
+    info map { item => LabelCreator(idNode(item.id), verbNode(item.label)) }
 
   def main (args: Array[String]) {
     val ppadir = args(0)
@@ -72,8 +72,8 @@ object PrepAttachTest {
     val outputDir = new File("data")
     outputDir.mkdirs()
     EdgeFileWriter(edges, outputDir.getPath + "/input_graph")
-    SeedFileWriter(seeds, outputDir.getPath + "/seeds")
-    SeedFileWriter(gold, outputDir.getPath + "/gold_labels")
+    LabelFileWriter(seeds, outputDir.getPath + "/seeds")
+    LabelFileWriter(gold, outputDir.getPath + "/gold_labels")
 
   }
 

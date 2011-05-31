@@ -40,11 +40,11 @@ object GraphConfigLoader {
     val edges = (edgeFilelist split(",") map (EdgeFileReader(_)) toList) flatten
 
     val seedFilelist = config.get("seed_file")
-    val seeds = (seedFilelist split(",") map (SeedFileReader(_)) toList) flatten
+    val seeds = (seedFilelist split(",") map (LabelFileReader(_)) toList) flatten
 
     val testLabels = {
-      if (config.containsKey("test_file")) SeedFileReader(config.get("test_file"))
-      else List[Seed]()
+      if (config.containsKey("test_file")) LabelFileReader(config.get("test_file"))
+      else List[Label]()
     }
 
     val graph = GraphBuilder(edges,
@@ -119,8 +119,8 @@ object GraphBuilder {
   import scala.collection.JavaConversions._
   import gnu.trove.TObjectIntHashMap
 
-  def apply (edges: List[Edge], seeds: List[Seed], maxSeedsPerClass: Int,
-             testLabels: List[Seed],
+  def apply (edges: List[Edge], seeds: List[Label], maxSeedsPerClass: Int,
+             testLabels: List[Label],
              pruneThreshold: String, beta: Double, isDirected: Boolean): Graph = {
 
     val graph = new Graph
@@ -163,7 +163,7 @@ object GraphBuilder {
     }
   }
 
-  def injectSeedLabels (graph: Graph, seeds: List[Seed], maxSeedsPerClass: Int) = {
+  def injectSeedLabels (graph: Graph, seeds: List[Label], maxSeedsPerClass: Int) = {
 
     val currSeedsPerClassCount = new TObjectIntHashMap[String]
 
@@ -189,7 +189,7 @@ object GraphBuilder {
     }
   }
 
-  def markTestNodes (graph: Graph, testLabels: List[Seed]) = {
+  def markTestNodes (graph: Graph, testLabels: List[Label]) = {
     for (node <- testLabels) {
       val vertex = graph._vertices.get(node.vertex)
       assert(vertex != null)
