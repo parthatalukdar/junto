@@ -103,9 +103,5 @@ public class GraphLoader {
 		
     return (g);
   }
-	
-  public static void main(String[] args) {
-    Hashtable config = ConfigReader.read_config(args);
-    GraphLoader.LoadGraph(config);
-  }
+
 }

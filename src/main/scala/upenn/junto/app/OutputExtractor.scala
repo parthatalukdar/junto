@@ -28,7 +28,6 @@ import org.clapper.argot._
 object OutputExtractor {
 
   val NodeRE = """([^_]+)_(.+)""".r
-    
 
   // Set up the options parser
   import ArgotConverters._

@@ -1,0 +1,103 @@
+# File where the input graph is stored. Format of the data
+# is specified by the "data_format" field. The most common
+# format is the edge_factored way where each line specifies an
+# edge in the graph. For example,
+# <source_node>TAB<target_node>TAB<edge_weight>
+#
+graph_file = data/input_graph
+data_format = edge_factored
+
+# Specifies the seed label information to be injected into
+# selected nodes at the start of the algorithm.
+seed_file = data/seeds
+
+# Gold labels of nodes (if known). This gold label information
+# is used only during evaluation.
+gold_labels_file = data/gold_labels
+
+# Nodes (along with corresponding gold label information) which
+# are used during evaluation, if any. This is kept as separate
+# option from the gold_labels_file, as we may not evaluate all
+# nodes whose gold label information is known. 
+test_file = data/gold_labels
+
+# Number of label propagation rounds
+iters = 10
+verbose = false
+
+# All nodes with degree lower than this threshold will be pruned
+# away. No nodes will be pruned with a threshold of 0
+prune_threshold = 0
+
+# Choose one of the three label propagations algorithms
+#algo = lp_zgl
+#algo = adsorption
+algo = mad
+
+# Hyperparameters for Adsorption and MAD
+mu1 = 1
+mu2 = 1e-2
+mu3 = 1e-2
+beta = 2
+
+# File where label propagation output is stored. Each line
+# corresponds to a node and fields in the line are organized
+# as follows:
+#
+# <node_name>TAB[<gold_label> <gold_score>]+TAB[<seed_label> <seed_score>]+TAB\
+#	[<estimated_label> <estimated_score>]+TAB<is_test_node>TAB<node_MRR>
+#
+# For nodes for which gold (or seed label) information is not known, the corresponding
+# field is left empty.
+#
+output_file = data/label_prop_output
+graph_file = data/input_graph
+data_format = edge_factored
+output_file = data/label_prop_output
+prune_threshold = 0
+mu3 = 1e-2
+mu2 = 1e-2
+mu1 = 1
+beta = 2
+iters = 10
+algo = mad
+verbose = false
+seed_file = data/seeds
+test_file = data/gold_labels
+gold_labels_file = data/gold_labels
+Going to build graph ...
+Loading from file: data/input_graph
+processed so far: 100000
+Total skipped: 0
+Total seeded nodes:: 16422
+Total 4039 nodes marked as test nodes!
+Total nodes pruned: 0
+ZERO ENTROPY NEIGHBORHOOD Heuristic adjustment used for 0 nodes!
+Seed injected: true
+ZERO ENTROPY NEIGHBORHOOD Heuristic adjustment used for 0 nodes!
+Total seed vertices: 16422
+Total test vertices: 3212
+Total seed vertices which are also test vertices: 0
+Total vertices: 37908
+Total edges: 213542
+Average degree: 5.633164503534874
+Min degree: 1
+Max degree: 7197
+
+Using keep_top_k_labels value: 2147483647
+Using mad ...
+
+Iteration: 1
+Iteration: 2
+Iteration: 3
+Iteration: 4
+Iteration: 5
+Iteration: 6
+Iteration: 7
+Iteration: 8
+Iteration: 9
+Iteration: 10
+precision 0.8281444582814446
+mrr 0.9139165628891657
+PRECISION 0.8281444582814446 (2660 correct out of 3212)
+MRR 0.9139165628891657

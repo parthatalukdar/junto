@@ -11,3 +11,4 @@ src_managed/
 project/boot/
 *~
 examples/simple/data/label_prop_output
+examples/ppa/data
