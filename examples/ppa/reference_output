@@ -66,11 +66,6 @@ seed_file = data/seeds
 test_file = data/gold_labels
 gold_labels_file = data/gold_labels
 Going to build graph ...
-Loading from file: data/input_graph
-processed so far: 100000
-Total skipped: 0
-Total seeded nodes:: 16422
-Total 4039 nodes marked as test nodes!
 Total nodes pruned: 0
 ZERO ENTROPY NEIGHBORHOOD Heuristic adjustment used for 0 nodes!
 Seed injected: true

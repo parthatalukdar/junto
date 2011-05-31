@@ -37,17 +37,16 @@ object GraphConfigLoader {
     val beta = Defaults.GetValueOrDefault(config.get("beta"), 2.0)
     val isDirected = Defaults.GetValueOrDefault(config.get("is_directed"), false)
 
-    EdgeFactoredGraphBuilder(graph,
-                             config.get("graph_file"),
-                             config.get("seed_file"),
-                             maxSeedsPerClass,
-                             config.get("test_file"),           /* can be null */
-                             config.get("source_freq_file"),    /* can be null */
-                             config.get("target_filter_file"),  /* can be null */
-                             config.get("prune_threshold"),
-                             beta,
-                             isDirected)
-			
+    GraphBuilder(graph,
+                 config.get("graph_file"),
+                 config.get("seed_file"),
+                 maxSeedsPerClass,
+                 config.get("test_file"),           /* can be null */
+                 config.get("source_freq_file"),    /* can be null */
+                 config.get("prune_threshold"),
+                 beta,
+                 isDirected)
+
     // gold labels for some or all of the nodes 
     if (config.containsKey("gold_labels_file"))
       graph.SetGoldLabels(config.get("gold_labels_file"))
@@ -58,7 +57,7 @@ object GraphConfigLoader {
       Defaults.GetValueOrDefault(config.get("set_gaussian_kernel_weights"), false)
 
     if (setGaussianWeights) {
-      MessagePrinter.Print("Going to set Gaussian Kernel weights ...");
+      MessagePrinter.Print("Going to set Gaussian Kernel weights ...")
       val sigmaFactor = Defaults.GetValueOrDie(config, "gauss_sigma_factor").toDouble
       graph.SetGaussianWeights(sigmaFactor)
     }
@@ -106,20 +105,18 @@ object GraphConfigLoader {
 }
 
 
-object EdgeFactoredGraphBuilder {
+object GraphBuilder {
 
   import io.Source
   import scala.collection.JavaConversions._
   import gnu.trove.TObjectIntHashMap
 
   def apply (graph: Graph, fileName: String, seedFile: String, maxSeedsPerClass: Int,
-             testFile: String, srcFilterFile: String, trgFilterFile: String,
+             testFile: String, srcFilterFile: String,
              pruneThreshold: String, beta: Double, isDirected: Boolean): Graph = {
 
     // build the graph itself
-    buildMultilineInstance(graph, fileName, srcFilterFile, 
-                           trgFilterFile, pruneThreshold,
-                           isDirected)
+    buildMultilineInstance(graph, fileName, srcFilterFile, pruneThreshold, isDirected)
 
     // Inject seed labels
     if (seedFile != null) {
@@ -136,118 +133,84 @@ object EdgeFactoredGraphBuilder {
       graph.PruneLowDegreeNodes(Integer.parseInt(pruneThreshold))
 		
     // calculate random walk probabilities
-    graph.CalculateRandomWalkProbabilities(beta);
+    graph.CalculateRandomWalkProbabilities(beta)
 		
     graph
   }
   
   def buildMultilineInstance (graph: Graph, filelist: String, 
-                              srcFilterFile: String, trgFilterFile: String,
+                              srcFilterFile: String, 
                               pruneThresholdStr: String, isDirected: Boolean) = {
     
     val pruneThreshold = pruneThresholdStr.toInt
 
+    val edges = (filelist split(",") map (EdgeFileReader(_)) toList) flatten
+
+    val srcValAlphabet = {
+      if   (srcFilterFile != null) loadValAlphabetFile(srcFilterFile, pruneThreshold)
+      else null
+    }
+
     var totalSkipped = 0
-    for (filename <- filelist split(";")) {
-      MessagePrinter.Print("Loading from file: " + filename)
 
-      var totalProcessed = 0
-      
-      val srcValAlphabet = {
-        if   (srcFilterFile != null) loadValAlphabetFile(srcFilterFile, pruneThreshold)
-        else null
-      }
+    for (edge <- edges) {
 
-      for (line <- Source fromFile(filename) getLines) {
-        totalProcessed += 1
-
-        if (totalProcessed % 100000 == 0)
-          println("processed so far: " + totalProcessed)
-
-        // doc feat val
-        val Array(srcNodeNameStr, trgNodeName, weightStr) = line.trim split("\t")
-	val weight = weightStr.toDouble
-        
-        // if source frequency filter is to be applied and the current source
-        // node is not present in the map, then skip current edge.
-        if (srcFilterFile != null && !srcValAlphabet.contains(srcNodeNameStr)) {
-
-          totalSkipped += 1
-
-        } else {
-				
-	  val srcNodeName = {
-            if   (srcValAlphabet != null) Integer.toString(srcValAlphabet(srcNodeNameStr))
-            else srcNodeNameStr
-          }
-					
-          // doc -> feat
-          val dv = graph.AddVertex(srcNodeName, Constants.GetDummyLabel)
-          dv.AddNeighbor(trgNodeName, weight)
-	  
-          // feat -> doc
-          if (!isDirected) {
-            val fv = graph.AddVertex(trgNodeName, Constants.GetDummyLabel)
-            fv.AddNeighbor(srcNodeName, weight)
-          }
+      // if source frequency filter is to be applied and the current source
+      // node is not present in the map, then skip current edge.
+      if (srcFilterFile == null || srcValAlphabet.contains(edge.source)) {
+	
+	val srcNodeName = {
+          if   (srcValAlphabet != null) Integer.toString(srcValAlphabet(edge.source))
+          else edge.source
+        }
+	
+        // source -> target
+        val dv = graph.AddVertex(srcNodeName, Constants.GetDummyLabel)
+        dv.AddNeighbor(edge.target, edge.weight)
+	
+        // target -> source
+        if (!isDirected) {
+          val fv = graph.AddVertex(edge.target, Constants.GetDummyLabel)
+          fv.AddNeighbor(srcNodeName, edge.weight)
         }
       }
-			
-      println("Total skipped: " + totalSkipped)
     }
   }
 
-  def injectSeedLabels (graph: Graph, seedFilelist: String, 
+  def injectSeedLabels (graph: Graph, filelist: String, 
                         maxSeedsPerClass: Int, alsoMarkTest: Boolean) = {
+
+    val seeds = (filelist split(",") map (SeedFileReader(_)) toList) flatten
 
     val currSeedsPerClassCount = new TObjectIntHashMap[String]
 
-    for (filename <- seedFilelist split(",")) {
-      for (line <- Source fromFile(filename) getLines) {
+    for (seed <- seeds) {
 
-        // node_idx seed_label score
-        val Array(nodename, seedlabel, scoreStr) = line.trim.split("\t")
-	val score = scoreStr.toDouble
+      if (!currSeedsPerClassCount.containsKey(seed.label))
+        currSeedsPerClassCount.put(seed.label, 0)
 
-        if (!currSeedsPerClassCount.containsKey(seedlabel))
-          currSeedsPerClassCount.put(seedlabel, 0)
+      val vertex = graph._vertices.get(seed.vertex)
+      if (vertex != null) {
+        // update gold label of the current node
+        vertex.SetGoldLabel(seed.label, seed.score)
 
-        val vertex = graph._vertices.get(nodename)
-        if (vertex != null) {
-          // update gold label of the current node
-          vertex.SetGoldLabel(seedlabel, score)
-
-          if (currSeedsPerClassCount.get(seedlabel) < maxSeedsPerClass) {
-            // add current label to the node's injected labels if not
-            // already present
-            if (!vertex.GetInjectedLabelScores.containsKey(seedlabel)) {
-              vertex.SetInjectedLabelScore(seedlabel, score)
-              vertex.SetSeedNode
-              currSeedsPerClassCount.increment(seedlabel)
-            }
-          } else if (alsoMarkTest) {
-            vertex.SetTestNode()
+        if (currSeedsPerClassCount.get(seed.label) < maxSeedsPerClass) {
+          // add current label to the node's injected labels if not
+          // already present
+          if (!vertex.GetInjectedLabelScores.containsKey(seed.label)) {
+            vertex.SetInjectedLabelScore(seed.label, seed.score)
+            vertex.SetSeedNode
+            currSeedsPerClassCount.increment(seed.label)
           }
+        } else if (alsoMarkTest) {
+          vertex.SetTestNode
         }
       }
     }
-
-    var testNodeCnt = 0
-    var seedNodeCnt = 0
-    for (vname: String <- graph._vertices.keySet.toSet) {
-      val vertex = graph._vertices.get(vname);
-      if (vertex.IsTestNode) testNodeCnt += 1
-      if (vertex.IsSeedNode) seedNodeCnt += 1
-    }                              
-
-    println("Total seeded nodes:: " + seedNodeCnt)
-    if (alsoMarkTest)
-      println("Total test nodes:: " + testNodeCnt)
   }
 
 
   def markTestNodes (graph: Graph, testFile: String) = {
-    var cnt = 0
     for (line <- Source fromFile(testFile) getLines) {
       val Array(nodename, seedlabel, scoreStr) = line.trim.split("\t")
 
@@ -256,9 +219,7 @@ object EdgeFactoredGraphBuilder {
 				
       vertex.SetGoldLabel(seedlabel, scoreStr.toDouble)
       vertex.SetTestNode()
-      cnt += 1
     }			
-    println("Total " + cnt + " nodes marked as test nodes!")
   }
 
   def loadValAlphabetFile (filename: String, freqThreshold: Int) = {
@@ -271,8 +232,6 @@ object EdgeFactoredGraphBuilder {
       if (valCount.toInt > freqThreshold)
         retMap.put(valString, lineNum)
     }
-
-    println("Total " + retMap.size + " loaded from " + filename);
     retMap
   }
 

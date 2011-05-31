@@ -34,8 +34,17 @@ object EdgeFileWriter {
   }
 }
 
-class Seed (val vertex: String, val label: String, val weight: Double) {
-  override def toString = vertex + "\t" + label + "\t" + weight
+object EdgeFileReader {
+  def apply (filename: String): List[Edge] = {
+    (for (line <- io.Source fromFile(filename) getLines) yield {
+      val Array(source, target, weight) = line.trim split("\t")
+      new Edge(source, target, weight.toDouble)
+    }).toList
+  }
+}
+
+class Seed (val vertex: String, val label: String, val score: Double) {
+  override def toString = vertex + "\t" + label + "\t" + score
 }
 
 object SeedCreator {
@@ -49,5 +58,14 @@ object SeedFileWriter {
     seeds foreach { seed => out.write(seed.toString + "\n") }
     out.flush
     out.close
+  }
+}
+
+object SeedFileReader {
+  def apply (filename: String): List[Seed] = {
+    (for (line <- io.Source fromFile(filename) getLines) yield {
+      val Array(vertex, label, score) = line.trim split("\t")
+      new Seed(vertex, label, score.toDouble)
+    }).toList
   }
 }
