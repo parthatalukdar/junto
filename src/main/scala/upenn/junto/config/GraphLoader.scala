@@ -198,17 +198,4 @@ object GraphBuilder {
     }			
   }
 
-  def loadValAlphabetFile (filename: String, freqThreshold: Int) = {
-    val retMap = new scala.collection.mutable.HashMap[String,Int]
-    var lineNum = 0
-    
-    for (line <- Source fromFile(filename) getLines) {
-      lineNum += 1
-      val Array(valCount, valString) = line.trim split("\t")
-      if (valCount.toInt > freqThreshold)
-        retMap.put(valString, lineNum)
-    }
-    retMap
-  }
-
 }
