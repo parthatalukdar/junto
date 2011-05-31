@@ -163,8 +163,8 @@ public class BuildGraphFromEdgeFactoredData {
     return (g);
   }
 	
-  private static TObjectIntHashMap LoadValAlphabetFile(String fileName,
-                                                       int freqThreshold) {
+  public static TObjectIntHashMap<String> LoadValAlphabetFile(String fileName,
+                                                              int freqThreshold) {
     TObjectIntHashMap retMap = new TObjectIntHashMap();
     try {
       BufferedReader bfr = new BufferedReader(new FileReader(fileName));
@@ -194,7 +194,7 @@ public class BuildGraphFromEdgeFactoredData {
     return (retMap);
   }
 	
-  private static HashSet LoadFilterFile(String filterFile) {
+  public static HashSet LoadFilterFile(String filterFile) {
     HashSet retSet = new HashSet();
     try {
       BufferedReader bfr = new BufferedReader(new FileReader(filterFile));
@@ -210,7 +210,7 @@ public class BuildGraphFromEdgeFactoredData {
     return (retSet);
   }
 	
-  private static Graph InjectSeedLabels(Graph g, String seedFile,
+  public static Graph InjectSeedLabels(Graph g, String seedFile,
                                         int maxSeedsPerClass, boolean alsoMarkTest) {
     try {
       //			TObjectIntHashMap totalSeedsPerClass = LoadUniqSeedClassCounts(g, seedFile);
@@ -285,7 +285,7 @@ public class BuildGraphFromEdgeFactoredData {
     return (g);
   }
 	
-  private static TObjectIntHashMap LoadUniqSeedClassCounts(Graph g, String seedFile) {
+  public static TObjectIntHashMap LoadUniqSeedClassCounts(Graph g, String seedFile) {
     TObjectIntHashMap classFreq = new TObjectIntHashMap();
     try {
       HashSet<String> alreadyProcessed = new HashSet<String>();
@@ -314,7 +314,7 @@ public class BuildGraphFromEdgeFactoredData {
     return (classFreq);
   }
 	
-  private static Graph MarkTestNodes(Graph g, String testFile) {
+  public static Graph MarkTestNodes(Graph g, String testFile) {
     try {
       BufferedReader br = new BufferedReader(new FileReader(testFile));
       String id;
@@ -340,7 +340,7 @@ public class BuildGraphFromEdgeFactoredData {
   }
 
 
-  private static String GetMD5Hash(String input) {
+  public static String GetMD5Hash(String input) {
     MessageDigest m = null;
     try {
       m = MessageDigest.getInstance("MD5");

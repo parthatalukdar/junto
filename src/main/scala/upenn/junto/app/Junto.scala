@@ -19,6 +19,7 @@ package upenn.junto.app
 import java.util.{ArrayList,Hashtable}
 import gnu.trove.TObjectDoubleHashMap
 import upenn.junto.algorithm._
+import upenn.junto.config._
 import upenn.junto.graph._
 import upenn.junto.util._
 
@@ -99,105 +100,3 @@ object JuntoConfigRunner {
 
 }
 
-
-
-object GraphConfigLoader { 
-
-  def apply (config: Hashtable[String, String]): Graph = {
-    val graph = new Graph
-		
-    println("Going to build graph ...")
-
-    val dataFormat = Defaults.GetValueOrDefault(config.get("data_format"), "edge_factored")
-
-    // this is used mostly for the data received from Mark, i.e.
-    // for information extraction machine learning work.
-    val maxSeedsPerClass = 
-      Defaults.GetValueOrDefault(config.get("max_seeds_per_class"), Integer.MAX_VALUE)
-		
-    val beta = Defaults.GetValueOrDefault(config.get("beta"), 2.0)
-    val isDirected = Defaults.GetValueOrDefault(config.get("is_directed"), false)
-
-    dataFormat match {
-      // edge factored representation is mostly used for the
-      // information integration work.
-      case "edge_factored" => {
-        BuildGraphFromEdgeFactoredData.Build(graph,
-                                             config.get("graph_file"),
-                                             config.get("seed_file"),
-                                             maxSeedsPerClass,
-                                             config.get("test_file"),           /* can be null */
-                                             config.get("source_freq_file"),    /* can be null */
-                                             config.get("target_filter_file"),  /* can be null */
-                                             config.get("prune_threshold"),
-                                             beta,
-                                             isDirected)
-			
-        // gold labels for some or all of the nodes 
-        if (config.containsKey("gold_labels_file"))
-          graph.SetGoldLabels(config.get("gold_labels_file"))
-      }
-      case "node_factored" => {
-        BuildGraphFromNodeFactoredData.Build(graph,
-                                             config.get("graph_file"),
-                                             config.get("seed_file"),
-                                             maxSeedsPerClass,
-                                             config.get("test_file"),
-                                             beta,
-                                             isDirected)
-      }
-      case _ => throw new RuntimeException("Data format " + dataFormat + " not recognized.")
-    }
-		
-    // set Gaussian Kernel weights, if requested. In this case, we assume that existing
-    // edge weights are distance squared i.e. || x_i - x_j ||^2  
-    val setGaussianWeights = 
-      Defaults.GetValueOrDefault(config.get("set_gaussian_kernel_weights"), false)
-
-    if (setGaussianWeights) {
-      MessagePrinter.Print("Going to set Gaussian Kernel weights ...");
-      val sigmaFactor = Defaults.GetValueOrDie(config, "gauss_sigma_factor").toDouble
-      graph.SetGaussianWeights(sigmaFactor)
-    }
-		
-    // keep only top K neighbors: kNN, if requested
-    if (config.containsKey("top_k_neighbors")) {
-      val maxNeighbors = 
-        Defaults.GetValueOrDefault(config.get("top_k_neighbors"), Integer.MAX_VALUE)
-      graph.KeepTopKNeighbors(maxNeighbors)
-    }
-		
-    // check whether random train and test splits are to be generated
-    if (config.containsKey("train_fract")) {
-      val trainFraction = Defaults.GetValueOrDie(config, "train_fract").toDouble
-      CrossValidationGenerator.Split(graph, trainFraction)
-      graph.SetSeedInjected()
-    }
-		
-    MessagePrinter.Print("Seed injected: " + graph.IsSeedInjected)
-    if (graph.IsSeedInjected) {
-      // remove seed labels which are not present in any of the test nodes
-      // graph.RemoveTrainOnlyLabels
-		
-      // check whether the seed information is consistent
-      // graph.CheckAndStoreSeedLabelInformation(maxSeedsPerClass)
-		
-      // calculate random walk probabilities.
-      // random walk probability computation depends on the seed label information,
-      // and hence this can be done only after the seed labels have been injected.
-      graph.CalculateRandomWalkProbabilities(beta)
-    }
-
-    // print out graph statistics
-    MessagePrinter.Print(GraphStats.PrintStats(graph))
-		
-    // save graph in file, if requested
-    if (config.containsKey("graph_output_file")) {
-      // graph.WriteToFile(config.get("graph_output_file"))
-      graph.WriteToFileWithAlphabet(config.get("graph_output_file"))
-    }
-
-    graph
-  }
-
-}

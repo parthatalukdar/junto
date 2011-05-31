@@ -1,4 +1,4 @@
-package upenn.junto.app;
+package upenn.junto.util;
 
 import gnu.trove.TObjectIntHashMap;
 
@@ -11,6 +11,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
+import upenn.junto.config.*;
 import upenn.junto.graph.*;
 import upenn.junto.util.MessagePrinter;
 
