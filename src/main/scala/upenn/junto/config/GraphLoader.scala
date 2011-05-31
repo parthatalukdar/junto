@@ -127,7 +127,8 @@ object GraphConfigLoader {
 object EdgeFactoredGraphBuilder {
 
   import io.Source
-  import BuildGraphFromEdgeFactoredData._
+  import scala.collection.JavaConversions._
+  import gnu.trove.TObjectIntHashMap
 
   def apply (graph: Graph, fileName: String, seedFile: String, maxSeedsPerClass: Int,
              testFile: String, srcFilterFile: String, trgFilterFile: String,
@@ -140,14 +141,14 @@ object EdgeFactoredGraphBuilder {
 
     // Inject seed labels
     if (seedFile != null) {
-      InjectSeedLabels(graph, seedFile, maxSeedsPerClass, (testFile == null))
+      injectSeedLabels(graph, seedFile, maxSeedsPerClass, (testFile == null))
       graph.SetSeedInjected
     }
 		
     // Mark all test nodes which will be used
     // during evaluation.
     if (testFile != null)
-      MarkTestNodes(graph, testFile)
+      markTestNodes(graph, testFile)
 		
     if (pruneThreshold != null) 
       graph.PruneLowDegreeNodes(Integer.parseInt(pruneThreshold))
@@ -163,57 +164,55 @@ object EdgeFactoredGraphBuilder {
                               pruneThresholdStr: String, isDirected: Boolean) = {
     
     val pruneThreshold = pruneThresholdStr.toInt
-    val filenames = filelist split(";")
-			
+
     var totalSkipped = 0
-    for (filename <- filenames) {
+    for (filename <- filelist split(";")) {
       MessagePrinter.Print("Loading from file: " + filename)
 
       var totalProcessed = 0
       
       val srcValAlphabet = {
-        if   (srcFilterFile != null) LoadValAlphabetFile(srcFilterFile, pruneThreshold)
+        if   (srcFilterFile != null) loadValAlphabetFile(srcFilterFile, pruneThreshold)
         else null
       }
 
       val trgValFilter = {
-        if   (trgFilterFile != null) LoadFilterFile(trgFilterFile)
+        if   (trgFilterFile != null) loadFilterFile(trgFilterFile)
         else null
       }
       
       for (line <- Source fromFile(filename) getLines) {
-        line.trim
-
         totalProcessed += 1
 
         if (totalProcessed % 100000 == 0)
           println("processed so far: " + totalProcessed)
 
-
         // doc feat val
-        val Array(srcNodeNameStr, trgNodeName, weightStr) = line split("\t")
+        val Array(srcNodeNameStr, trgNodeName, weightStr) = line.trim split("\t")
 	val weight = weightStr.toDouble
         
         // if source frequency filter is to be applied and the current source
         // node is not present in the map, then skip current edge.
         if (srcFilterFile != null && !srcValAlphabet.containsKey(srcNodeNameStr)) {
+
           totalSkipped += 1
-          //continue;
-        }
+
+        } else {
 				
-	val srcNodeName = {
-          if   (srcValAlphabet != null) Integer.toString(srcValAlphabet.get(srcNodeNameStr))
-          else srcNodeNameStr
-        }
+	  val srcNodeName = {
+            if   (srcValAlphabet != null) Integer.toString(srcValAlphabet.get(srcNodeNameStr))
+            else srcNodeNameStr
+          }
 					
-        // doc -> feat
-        val dv = graph.AddVertex(srcNodeName, Constants.GetDummyLabel)
-        dv.AddNeighbor(trgNodeName, weight)
-	
-        // feat -> doc
-        if (!isDirected) {
-          val fv = graph.AddVertex(trgNodeName, Constants.GetDummyLabel)
-          fv.AddNeighbor(srcNodeName, weight)
+          // doc -> feat
+          val dv = graph.AddVertex(srcNodeName, Constants.GetDummyLabel)
+          dv.AddNeighbor(trgNodeName, weight)
+	  
+          // feat -> doc
+          if (!isDirected) {
+            val fv = graph.AddVertex(trgNodeName, Constants.GetDummyLabel)
+            fv.AddNeighbor(srcNodeName, weight)
+          }
         }
       }
 			
@@ -221,8 +220,93 @@ object EdgeFactoredGraphBuilder {
     }
   }
 
-  //def injectSeedLabels = {}
-  //
-  //def markTestNodes = {}
+  def injectSeedLabels (graph: Graph, seedFilelist: String, 
+                        maxSeedsPerClass: Int, alsoMarkTest: Boolean) = {
+
+    val currSeedsPerClassCount = new TObjectIntHashMap[String]
+
+    for (filename <- seedFilelist split(",")) {
+      for (line <- Source fromFile(filename) getLines) {
+
+        // node_idx seed_label score
+        val Array(nodename, seedlabel, scoreStr) = line.trim.split("\t")
+	val score = scoreStr.toDouble
+
+        if (!currSeedsPerClassCount.containsKey(seedlabel))
+          currSeedsPerClassCount.put(seedlabel, 0)
+
+        val vertex = graph._vertices.get(nodename)
+        if (vertex != null) {
+          // update gold label of the current node
+          vertex.SetGoldLabel(seedlabel, score)
+
+          if (currSeedsPerClassCount.get(seedlabel) < maxSeedsPerClass) {
+            // add current label to the node's injected labels if not
+            // already present
+            if (!vertex.GetInjectedLabelScores.containsKey(seedlabel)) {
+              vertex.SetInjectedLabelScore(seedlabel, score)
+              vertex.SetSeedNode
+              currSeedsPerClassCount.increment(seedlabel)
+            }
+          } else if (alsoMarkTest) {
+            vertex.SetTestNode()
+          }
+        }
+      }
+    }
+
+    var testNodeCnt = 0
+    var seedNodeCnt = 0
+    for (vname: String <- graph._vertices.keySet.toSet) {
+      val vertex = graph._vertices.get(vname);
+      if (vertex.IsTestNode) testNodeCnt += 1
+      if (vertex.IsSeedNode) seedNodeCnt += 1
+    }                              
+
+    println("Total seeded nodes:: " + seedNodeCnt)
+    if (alsoMarkTest)
+      println("Total test nodes:: " + testNodeCnt)
+  }
+
+
+  def markTestNodes (graph: Graph, testFile: String) = {
+    var cnt = 0
+    for (line <- Source fromFile(testFile) getLines) {
+      val Array(nodename, seedlabel, scoreStr) = line.trim.split("\t")
+
+      val vertex = graph._vertices.get(nodename)
+      assert(vertex != null)
+				
+      vertex.SetGoldLabel(seedlabel, scoreStr.toDouble)
+      vertex.SetTestNode()
+      cnt += 1
+    }			
+    println("Total " + cnt + " nodes marked as test nodes!")
+  }
+
+  def loadValAlphabetFile (filename: String, freqThreshold: Int): TObjectIntHashMap[String] = {
+    val retMap = new TObjectIntHashMap[String]
+
+    var lineNum = 0
+    for (line <- Source fromFile(filename) getLines) {
+      lineNum += 1
+      val Array(valCount, valString) = line.trim split("\t")
+      if (valCount.toInt > freqThreshold)
+        retMap.put(valString, lineNum)
+    }
+
+    println("Total " + retMap.size + " loaded from " + filename);
+    retMap
+  }
+
+  def loadFilterFile (filterFile: String) = {
+    val retSet = new java.util.HashSet[String]
+    for (line <- Source fromFile(filterFile) getLines)
+      retSet.add(line)
+
+    System.out.println("Total " + retSet.size + " loaded from " + filterFile)
+    retSet
+  }
+
 
 }

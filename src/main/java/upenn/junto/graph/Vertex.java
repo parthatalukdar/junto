@@ -34,7 +34,7 @@ public class Vertex {
   // labels & scores which are injected in the node
   // as prior knowledge. Only positive scores are
   // allowed.
-  private TObjectDoubleHashMap injected_labels_;
+  private TObjectDoubleHashMap<String> injected_labels_;
 	
   // labels & their scores estimated by the algorithm.
   // only positive scores are allowed.
@@ -75,7 +75,7 @@ public class Vertex {
     this.injectProb_ = -1;
     this.abndProb_ = -1;
     //		this.isTransitionNormalized = false;
-    this.injected_labels_ = new TObjectDoubleHashMap();
+    this.injected_labels_ = new TObjectDoubleHashMap<String>();
     this.estimated_labels_ = new TObjectDoubleHashMap();
     this.neighbors_ = new TObjectDoubleHashMap();
     this.goldLabel_ = new TObjectDoubleHashMap();
@@ -149,7 +149,7 @@ public class Vertex {
       injected_labels_.get(l) : 0;
   }
 	
-  public TObjectDoubleHashMap GetInjectedLabelScores() {
+  public TObjectDoubleHashMap<String> GetInjectedLabelScores() {
     return this.injected_labels_;
   }
 	
