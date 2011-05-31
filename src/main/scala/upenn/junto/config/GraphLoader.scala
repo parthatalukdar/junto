@@ -49,10 +49,9 @@ object GraphConfigLoader {
 
     val graph = GraphBuilder(edges,
                              seeds,
-                             maxSeedsPerClass,
                              testLabels,
+                             maxSeedsPerClass,
                              config.get("prune_threshold"),
-                             beta,
                              isDirected)
 
     // gold labels for some or all of the nodes 
@@ -119,37 +118,12 @@ object GraphBuilder {
   import scala.collection.JavaConversions._
   import gnu.trove.TObjectIntHashMap
 
-  def apply (edges: List[Edge], seeds: List[Label], maxSeedsPerClass: Int,
-             testLabels: List[Label],
-             pruneThreshold: String, beta: Double, isDirected: Boolean): Graph = {
+  def apply (edges: List[Edge], seeds: List[Label], testLabels: List[Label], 
+             maxSeedsPerClass: Int, pruneThreshold: String, isDirected: Boolean) = {
 
     val graph = new Graph
 
-    // build the graph itself
-    buildMultilineInstance(graph, edges, isDirected)
-
-    // Inject seed labels
-    if (seeds.length > 0) {
-      injectSeedLabels(graph, seeds, maxSeedsPerClass)
-      graph.SetSeedInjected
-    }
-		
-    // Mark all test nodes which will be used
-    // during evaluation.
-    if (testLabels.length > 0)
-      markTestNodes(graph, testLabels)
-		
-    if (pruneThreshold != null) 
-      graph.PruneLowDegreeNodes(pruneThreshold.toInt)
-		
-    // calculate random walk probabilities
-    graph.CalculateRandomWalkProbabilities(beta)
-		
-    graph
-  }
-  
-  def buildMultilineInstance (graph: Graph, edges: List[Edge], isDirected: Boolean) = {
-    
+    // Build the graph from the edges
     for (edge <- edges) {
       // source -> target
       val dv = graph.AddVertex(edge.source, Constants.GetDummyLabel)
@@ -161,41 +135,48 @@ object GraphBuilder {
         fv.AddNeighbor(edge.source, edge.weight)
       }
     }
-  }
 
-  def injectSeedLabels (graph: Graph, seeds: List[Label], maxSeedsPerClass: Int) = {
+    // Inject seed labels
+    if (seeds.length > 0) {
+      graph.SetSeedInjected
 
-    val currSeedsPerClassCount = new TObjectIntHashMap[String]
+      val currSeedsPerClassCount = new TObjectIntHashMap[String]
+      for (seed <- seeds) {
 
-    for (seed <- seeds) {
+        if (!currSeedsPerClassCount.containsKey(seed.label))
+          currSeedsPerClassCount.put(seed.label, 0)
 
-      if (!currSeedsPerClassCount.containsKey(seed.label))
-        currSeedsPerClassCount.put(seed.label, 0)
+        val vertex = graph._vertices.get(seed.vertex)
+        if (vertex != null) {
+          // update gold label of the current node
+          vertex.SetGoldLabel(seed.label, seed.score)
 
-      val vertex = graph._vertices.get(seed.vertex)
-      if (vertex != null) {
-        // update gold label of the current node
-        vertex.SetGoldLabel(seed.label, seed.score)
-
-        // add current label to the node's injected labels if not
-        // already present
-        if (currSeedsPerClassCount.get(seed.label) < maxSeedsPerClass 
-            && !vertex.GetInjectedLabelScores.containsKey(seed.label)) {
-          vertex.SetInjectedLabelScore(seed.label, seed.score)
-          vertex.SetSeedNode
-          currSeedsPerClassCount.increment(seed.label)
+          // add current label to the node's injected labels if not
+          // already present
+          if (currSeedsPerClassCount.get(seed.label) < maxSeedsPerClass 
+              && !vertex.GetInjectedLabelScores.containsKey(seed.label)) {
+            vertex.SetInjectedLabelScore(seed.label, seed.score)
+            vertex.SetSeedNode
+            currSeedsPerClassCount.increment(seed.label)
+          }
         }
       }
     }
+		
+    // Mark all test nodes, which will be used during evaluation.
+    if (testLabels.length > 0) {
+      for (node <- testLabels) {
+        val vertex = graph._vertices.get(node.vertex)
+        assert(vertex != null)
+        vertex.SetGoldLabel(node.label, node.score)
+        vertex.SetTestNode
+      }			
+    }
+		
+    if (pruneThreshold != null) 
+      graph.PruneLowDegreeNodes(pruneThreshold.toInt)
+		
+    graph
   }
-
-  def markTestNodes (graph: Graph, testLabels: List[Label]) = {
-    for (node <- testLabels) {
-      val vertex = graph._vertices.get(node.vertex)
-      assert(vertex != null)
-      vertex.SetGoldLabel(node.label, node.score)
-      vertex.SetTestNode
-    }			
-  }
-
+  
 }
