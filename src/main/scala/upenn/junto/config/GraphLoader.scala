@@ -47,55 +47,22 @@ object GraphConfigLoader {
       else List[Label]()
     }
 
-    val graph = GraphBuilder(edges,
-                             seeds,
-                             testLabels,
-                             maxSeedsPerClass,
-                             config.get("prune_threshold"),
-                             isDirected)
+    val setGaussianWeights = 
+      Defaults.GetValueOrDefault(config.get("set_gaussian_kernel_weights"), false)
+    val sigmaFactor = Defaults.GetValueOrDefault(config.get("gauss_sigma_factor"), 0.0)
+		
+    // keep only top K neighbors: kNN, if requested
+    val maxNeighbors = Defaults.GetValueOrDefault(config.get("top_k_neighbors"), Integer.MAX_VALUE)
+
+		
+    val graph = GraphBuilder(edges, seeds, testLabels,
+                             beta, maxNeighbors, maxSeedsPerClass,
+                             setGaussianWeights, sigmaFactor,
+                             config.get("prune_threshold"), isDirected)
 
     // gold labels for some or all of the nodes 
     if (config.containsKey("gold_labels_file"))
       graph.SetGoldLabels(config.get("gold_labels_file"))
-		
-    // set Gaussian Kernel weights, if requested. In this case, we assume that existing
-    // edge weights are distance squared i.e. || x_i - x_j ||^2  
-    val setGaussianWeights = 
-      Defaults.GetValueOrDefault(config.get("set_gaussian_kernel_weights"), false)
-
-    if (setGaussianWeights) {
-      MessagePrinter.Print("Going to set Gaussian Kernel weights ...")
-      val sigmaFactor = Defaults.GetValueOrDie(config, "gauss_sigma_factor").toDouble
-      graph.SetGaussianWeights(sigmaFactor)
-    }
-		
-    // keep only top K neighbors: kNN, if requested
-    if (config.containsKey("top_k_neighbors")) {
-      val maxNeighbors = 
-        Defaults.GetValueOrDefault(config.get("top_k_neighbors"), Integer.MAX_VALUE)
-      graph.KeepTopKNeighbors(maxNeighbors)
-    }
-		
-    // check whether random train and test splits are to be generated
-    if (config.containsKey("train_fract")) {
-      val trainFraction = Defaults.GetValueOrDie(config, "train_fract").toDouble
-      CrossValidationGenerator.Split(graph, trainFraction)
-      graph.SetSeedInjected()
-    }
-		
-    MessagePrinter.Print("Seed injected: " + graph.IsSeedInjected)
-    if (graph.IsSeedInjected) {
-      // remove seed labels which are not present in any of the test nodes
-      // graph.RemoveTrainOnlyLabels
-		
-      // check whether the seed information is consistent
-      // graph.CheckAndStoreSeedLabelInformation(maxSeedsPerClass)
-		
-      // calculate random walk probabilities.
-      // random walk probability computation depends on the seed label information,
-      // and hence this can be done only after the seed labels have been injected.
-      graph.CalculateRandomWalkProbabilities(beta)
-    }
 
     // print out graph statistics
     MessagePrinter.Print(GraphStats.PrintStats(graph))
@@ -105,6 +72,7 @@ object GraphConfigLoader {
       // graph.WriteToFile(config.get("graph_output_file"))
       graph.WriteToFileWithAlphabet(config.get("graph_output_file"))
     }
+
 
     graph
   }
@@ -119,7 +87,9 @@ object GraphBuilder {
   import gnu.trove.TObjectIntHashMap
 
   def apply (edges: List[Edge], seeds: List[Label], testLabels: List[Label], 
-             maxSeedsPerClass: Int, pruneThreshold: String, isDirected: Boolean) = {
+             beta: Double, maxNeighbors: Int, maxSeedsPerClass: Int, 
+             setGaussianWeights: Boolean, sigmaFactor: Double,
+             pruneThreshold: String, isDirected: Boolean) = {
 
     val graph = new Graph
 
@@ -161,8 +131,13 @@ object GraphBuilder {
           }
         }
       }
+
+      // calculate random walk probabilities.
+      // random walk probability computation depends on the seed label information,
+      // and hence this can be done only after the seed labels have been injected.
+      graph.CalculateRandomWalkProbabilities(beta)
     }
-		
+
     // Mark all test nodes, which will be used during evaluation.
     if (testLabels.length > 0) {
       for (node <- testLabels) {
@@ -172,6 +147,13 @@ object GraphBuilder {
         vertex.SetTestNode
       }			
     }
+
+    // set Gaussian Kernel weights, if requested. In this case, we assume that existing
+    // edge weights are distance squared i.e. || x_i - x_j ||^2  
+    if (setGaussianWeights)
+      graph.SetGaussianWeights(sigmaFactor)
+
+    graph.KeepTopKNeighbors(maxNeighbors)
 		
     if (pruneThreshold != null) 
       graph.PruneLowDegreeNodes(pruneThreshold.toInt)

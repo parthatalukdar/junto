@@ -18,6 +18,7 @@ package upenn.junto.test
 
 import java.io._
 import io.Source
+import upenn.junto.app._
 import upenn.junto.config._
 
 class PrepInfo (val id: String,   val verb: String, val noun: String, 
@@ -47,7 +48,7 @@ object PrepAttachTest {
     }).toList.flatten
   }
 
-  def createSeeds (info: List[PrepInfo]): List[Label] =
+  def createLabels (info: List[PrepInfo]): List[Label] =
     info map { item => LabelCreator(idNode(item.id), verbNode(item.label)) }
 
   def main (args: Array[String]) {
@@ -65,15 +66,21 @@ object PrepAttachTest {
 
     // Create the edges and seeds
     val edges = createEdges(trainInfo) ::: createEdges(devInfo) ::: createEdges(testInfo)
-    val seeds = createSeeds(trainInfo)
-    val gold = createSeeds(devInfo)
+    val seeds = createLabels(trainInfo)
+    val gold = createLabels(devInfo)
+
+    // Create the graph and run label propagation
+    val graph = JuntoRunner(edges, seeds, gold, 1.0, .01, .01, 10, false)
+    //graph.SaveEstimatedScores("data/label_prop_output")
+
+    // BELOW: This is the file-based paradigm
 
     // Write out the edges and seeds
-    val outputDir = new File("data")
-    outputDir.mkdirs()
-    EdgeFileWriter(edges, outputDir.getPath + "/input_graph")
-    LabelFileWriter(seeds, outputDir.getPath + "/seeds")
-    LabelFileWriter(gold, outputDir.getPath + "/gold_labels")
+    //val outputDir = new File("data")
+    //outputDir.mkdirs()
+    //EdgeFileWriter(edges, outputDir.getPath + "/input_graph")
+    //LabelFileWriter(seeds, outputDir.getPath + "/seeds")
+    //LabelFileWriter(gold, outputDir.getPath + "/gold_labels")
 
   }
 
