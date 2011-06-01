@@ -23,24 +23,21 @@ import upenn.junto.config._
 import upenn.junto.graph._
 import upenn.junto.util._
 
+/**
+ * Run Junto as an API call. To construct a graph, use upenn.junto.config.GraphBuilder.
+ */
 object JuntoRunner {
 
-  def apply (edges: List[Edge], seeds: List[Label], testLabels: List[Label],
-             mu1: Double, mu2: Double, mu3: Double,
-             maxIters: Int, verbose: Boolean): Graph = {
-    val graph = GraphBuilder(edges, seeds, testLabels, 
-                             2.0, Integer.MAX_VALUE, Integer.MAX_VALUE, 
-                             false, 0.0,
-                             null, false)
+  def apply (graph: Graph): Unit = apply(graph, 1.0, .01, .01, 10, false)
+
+  def apply (graph: Graph, mu1: Double, mu2: Double, mu3: Double, maxIters: Int, verbose: Boolean): Unit = 
     apply("mad", graph, maxIters, mu1, mu2, mu3, Integer.MAX_VALUE, 
           false, verbose, new ArrayList[TObjectDoubleHashMap[String]]())
-    graph
-  }
 
   def apply (algo: String, graph: Graph, maxIters: Int, 
              mu1: Double, mu2: Double, mu3: Double,
              keepTopKLabels: Int, useBipartiteOptimization: Boolean,
-             verbose: Boolean, resultList: ArrayList[TObjectDoubleHashMap[String]]): Graph = {
+             verbose: Boolean, resultList: ArrayList[TObjectDoubleHashMap[String]]): Unit = {
 
     algo match {
       case "adsorption" => {
@@ -60,12 +57,14 @@ object JuntoRunner {
       }
       case _ => MessagePrinter.PrintAndDie("Unknown algorithm: " + algo)
     }
-    graph
   }
 
 
 }
 
+/**
+ * Run Junto using a config file.
+ */
 object JuntoConfigRunner {
 
   def apply (config: Hashtable[String,String], 

@@ -70,7 +70,8 @@ object PrepAttachTest {
     val gold = createLabels(devInfo)
 
     // Create the graph and run label propagation
-    val graph = JuntoRunner(edges, seeds, gold, 1.0, .01, .01, 10, false)
+    val graph = GraphBuilder(edges, seeds, gold)
+    JuntoRunner(graph)
     //graph.SaveEstimatedScores("data/label_prop_output")
 
     // BELOW: This is the file-based paradigm

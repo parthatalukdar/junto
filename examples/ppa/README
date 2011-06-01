@@ -9,4 +9,8 @@ Junto on it and produce the output given in the file
 $ sh runppa.sh > my_output
 $ diff my_output reference_output
 
+Or, just do this if you don't need to look at the output:
+
+$ ./runppa.sh | diff - reference_output
+
 If all went as it should, you should see no differences.

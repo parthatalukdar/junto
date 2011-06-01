@@ -73,7 +73,6 @@ object GraphConfigLoader {
       graph.WriteToFileWithAlphabet(config.get("graph_output_file"))
     }
 
-
     graph
   }
 
@@ -85,6 +84,10 @@ object GraphBuilder {
   import io.Source
   import scala.collection.JavaConversions._
   import gnu.trove.TObjectIntHashMap
+
+  // Create a graph using lots of defaults
+  def apply (edges: List[Edge], seeds: List[Label], testLabels: List[Label]): Graph = 
+    apply(edges, seeds, testLabels, 2.0, Integer.MAX_VALUE, Integer.MAX_VALUE, false, 0.0, null, false)
 
   def apply (edges: List[Edge], seeds: List[Label], testLabels: List[Label], 
              beta: Double, maxNeighbors: Int, maxSeedsPerClass: Int, 
