@@ -1,4 +1,4 @@
-package upenn.junto.graph;
+package upenn.junto.config;
 
 import upenn.junto.util.MessagePrinter;
 

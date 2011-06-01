@@ -14,7 +14,7 @@ import java.util.Iterator;
 import gnu.trove.TDoubleArrayList;
 import gnu.trove.TObjectDoubleHashMap;
 
-import upenn.junto.graph.ConfigReader;
+import upenn.junto.config.ConfigReader;
 import upenn.junto.util.CollectionUtil;
 import upenn.junto.util.Constants;
 import upenn.junto.util.Defaults;
