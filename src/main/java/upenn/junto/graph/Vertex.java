@@ -38,7 +38,7 @@ public class Vertex {
 	
   // labels & their scores estimated by the algorithm.
   // only positive scores are allowed.
-  private TObjectDoubleHashMap estimated_labels_;
+  private TObjectDoubleHashMap<String> estimated_labels_;
 	
   // neighbors of the vertex along with edge/association
   // weight
@@ -182,7 +182,7 @@ public class Vertex {
     return (this.GetPrettyPrintMap(this.estimated_labels_, la));
   }
 	
-  public TObjectDoubleHashMap GetEstimatedLabelScores() {
+  public TObjectDoubleHashMap<String> GetEstimatedLabelScores() {
     return this.estimated_labels_;
   }
 	

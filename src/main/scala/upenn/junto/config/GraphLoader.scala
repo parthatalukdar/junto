@@ -85,6 +85,9 @@ object GraphBuilder {
   import scala.collection.JavaConversions._
   import gnu.trove.TObjectIntHashMap
 
+  // Create a graph using lots of defaults; no test labels provided
+  def apply (edges: List[Edge], seeds: List[Label]): Graph = apply(edges, seeds, List[Label]())
+
   // Create a graph using lots of defaults
   def apply (edges: List[Edge], seeds: List[Label], testLabels: List[Label]): Graph = 
     apply(edges, seeds, testLabels, 2.0, Integer.MAX_VALUE, Integer.MAX_VALUE, false, 0.0, null, false)
