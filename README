@@ -128,6 +128,11 @@ http://code.google.com/p/simple-build-tool/wiki/RunningSbt
 Note: if you have SBT already installed on your system, you can also
 just call it directly with "sbt".
 
+If you wish to use Junto as an API, you can create a self-contained
+assembly jar by using the "assembly" action in SBT. Also, you can just do:
+
+$ junto build assembly
+
 
 Trying it out
 =============
@@ -140,6 +145,9 @@ $ junto config simple_config
 Please look into the examples/simple/simple_config file for various 
 options available. Sample (dummy) data is made available in the 
 examples/simple/data directory.
+
+A more extensive example on prepositional phrase attachment is in
+examples/ppa. See the README in that directory for more details.
 
 
 Bug Reports
