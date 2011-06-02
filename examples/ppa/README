@@ -2,9 +2,9 @@ This example is current under construction. Documentation, etc., to
 come (on no particular schedule). 
 
 If all is compiled and setup, running "sh runppa.sh" in this directory
-should create graph information in a ./data directory and then run
-Junto on it and produce the output given in the file
-"reference_output". Easily check it this way:
+should construct a graph (via the API) and output the results of
+running MAD on the graph. The output should match that given in the
+file "reference_output". Easily check it this way:
 
 $ sh runppa.sh > my_output
 $ diff my_output reference_output
