@@ -16,7 +16,7 @@ package upenn.junto.config
  * limitations under the License.
  */
 
-class Edge (val source: String, val target: String, val weight: Double) {
+class Edge (val source: String, val target: String, val weight: Double) extends Serializable {
   override def toString = source + "\t" + target + "\t" + weight
 }
 
@@ -43,7 +43,7 @@ object EdgeFileReader {
   }
 }
 
-class Label (val vertex: String, val label: String, val score: Double) {
+class Label (val vertex: String, val label: String, val score: Double) extends Serializable {
   override def toString = vertex + "\t" + label + "\t" + score
 }
 
