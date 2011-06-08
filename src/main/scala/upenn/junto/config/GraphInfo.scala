@@ -16,6 +16,8 @@ package upenn.junto.config
  * limitations under the License.
  */
 
+import upenn.junto.util._
+
 class Edge (val source: String, val target: String, val weight: Double) {
   override def toString = source + "\t" + target + "\t" + weight
 }
@@ -37,8 +39,10 @@ object EdgeFileWriter {
 object EdgeFileReader {
   def apply (filename: String): List[Edge] = {
     (for (line <- io.Source fromFile(filename) getLines) yield {
-      val Array(source, target, weight) = line.trim split("\t")
-      new Edge(source, target, weight.toDouble)
+      // source target edge_weight
+      val fields = line.trim split("\t")
+      assert(fields.length == 3, { println("Invalid entry in graph file: " + line)})
+      new Edge(fields(0), fields(1), fields(2).toDouble)
     }).toList
   }
 }
