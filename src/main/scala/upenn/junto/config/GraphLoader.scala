@@ -36,10 +36,10 @@ object GraphConfigLoader {
     val beta = Defaults.GetValueOrDefault(config.get("beta"), 2.0)
     val isDirected = Defaults.GetValueOrDefault(config.get("is_directed"), false)
 
-    val edgeFilelist = config.get("graph_file")
+    val edgeFilelist = Defaults.GetValueOrDie(config, "graph_file")
     val edges = (edgeFilelist split(",") map (EdgeFileReader(_)) toList) flatten
 
-    val seedFilelist = config.get("seed_file")
+    val seedFilelist = Defaults.GetValueOrDie(config, "seed_file")
     val seeds = (seedFilelist split(",") map (LabelFileReader(_)) toList) flatten
 
     val testLabels = {
