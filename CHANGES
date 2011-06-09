@@ -1,0 +1,9 @@
+v 1.1
+-----
+ - Enabled Junto to be used as an API.
+ - Many classes simplified and ported to Scala.
+ - Changed from Ant to SBT build system.
+
+v 1.0
+-----
+Initial release.
