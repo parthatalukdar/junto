@@ -1,0 +1,53 @@
+
+The following instructions assume that Hadoop has already been installed in the system.
+
+In order to run Hadoop versions of various label propagation algorithms, we
+first need to convert the graph from edge factored to node factored representation.
+In addition to this format conversion, we also need to store the random walk
+probabilities for each node and store them in the node factored representation. This 
+is done to make the reduce step more efficient, especially because these structiral
+information don't change during the run of the algorithm. All these can be achieved
+by running the following. Please note that all the options below (except for hadoop_graph_file)
+are already present in the config file (first argument), we are re-specifying them 
+here to correct for the (relative) path name.
+
+$ junto run upenn.junto.graph.parallel.EdgeFactored2NodeFactored \
+	../simple/simple_config \
+	graph_file=../simple/data/input_graph \
+	seed_file=../simple/data/seeds \
+	gold_labels_file=../simple/data/gold_labels \
+	test_file=../simple/data/gold_labels \
+	hadoop_graph_file=data/input_graph_hadoop
+
+For sanity check,
+
+$ diff ./data/input_graph_hadoop_ref ./data/input_graph_hadoop
+
+should return nothing. This node factored graph should then be copied to the 
+Hadoop File System (HFS):
+
+$ hadoop fs -copyFromLocal data/input_graph_hadoop /path/on/hadoop
+
+This /path/on/hadoop should be the valud of hdfs_input_pattern in the simple_hadoop_config
+file below.
+
+Sample commands to run Hadoop-based implementations of LP_ZGL, Adsorption, and MAD:
+
+$ hadoop jar ~/research/workspace/junto/target/Junto-assembly-1.1.jar \
+	upenn.junto.algorithm.parallel.AdsorptionHadoop simple_hadoop_config
+
+$ hadoop jar ~/research/workspace/junto/target/Junto-assembly-1.1.jar \
+	upenn.junto.algorithm.parallel.LP_ZGL_Hadoop simple_hadoop_config
+
+$ hadoop jar ~/research/workspace/junto/target/Junto-assembly-1.1.jar \
+	upenn.junto.algorithm.parallel.MADHadoop simple_hadoop_config
+
+Once the Hadoop job has completed, it is now time to look at the output. Lets say,
+hdfs_output_base is set to /output/path/on/hadoop/base, and the job was run for 5 iterations 
+(both specified in the Hadoop config file, e.g., simple_hadoop_config above), then the final
+output will be saved in /output/path/on/hadoop/base_5/ in HFS. You can use the following command
+to look at the output:
+
+$ hadoop fs -cat /output/path/on/hadoop/base_5/*
+
+

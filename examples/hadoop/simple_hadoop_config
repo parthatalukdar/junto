@@ -1,0 +1,16 @@
+# input file patterns in Hadoop file system (HFS).
+# A sample input graph file is in data/input_graph_hadoop
+hdfs_input_pattern = /Users/ppt/input/input_graph_hadoop
+
+# output directory base name in HFS. Output from each iteration 
+# will be saved in a separate directory by appending iternation
+# number to this directory base name.
+hdfs_output_base = /Users/ppt/output_mad
+
+# number of iterations
+iters = 5
+
+# hyper-parameters
+mu1 = 1.0
+mu2 = 1e-2
+mu3 = 1e-4
