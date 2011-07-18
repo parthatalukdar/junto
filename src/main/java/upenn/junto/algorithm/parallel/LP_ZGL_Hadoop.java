@@ -209,35 +209,35 @@ public class LP_ZGL_Hadoop {
    }
  	
    public static void main(String[] args) throws Exception {
-	 Hashtable config = ConfigReader.read_config(args);  
-	   
-     JobConf conf = new JobConf(LP_ZGL_Hadoop.class);
-     conf.setJobName("lp_zgl_hadoop");
-
-     conf.setOutputKeyClass(Text.class);
-     conf.setOutputValueClass(Text.class);
-
-     conf.setMapperClass(LP_ZGL_Map.class);
-     // conf.setCombinerClass(LP_ZGL_Reduce.class);
-     conf.setReducerClass(LP_ZGL_Reduce.class);
-
-     conf.setInputFormat(TextInputFormat.class);
-     conf.setOutputFormat(TextOutputFormat.class);
-
+	 Hashtable config = ConfigReader.read_config(args);
+	 
      String baseInputFilePat = Defaults.GetValueOrDie(config, "hdfs_input_pattern");
      String baseOutputFilePat = Defaults.GetValueOrDie(config, "hdfs_output_base");
      int numIterations = Integer.parseInt(Defaults.GetValueOrDie(config, "iters")); 
-     
-     // hyperparameters
-     conf.set("mu1", Defaults.GetValueOrDie(config, "mu1"));
-     conf.set("mu2", Defaults.GetValueOrDie(config, "mu2"));
-     conf.set("keepTopKLabels",
-    		  Defaults.GetValueOrDefault((String) config.get("keep_top_k_labels"),
-    				  					 Integer.toString(Integer.MAX_VALUE)));
-
+	   
      String currInputFilePat = baseInputFilePat;
      String currOutputFilePat = "";
      for (int iter = 1; iter <= numIterations; ++iter) {
+	     JobConf conf = new JobConf(LP_ZGL_Hadoop.class);
+	     conf.setJobName("lp_zgl_hadoop");
+	
+	     conf.setOutputKeyClass(Text.class);
+	     conf.setOutputValueClass(Text.class);
+	
+	     conf.setMapperClass(LP_ZGL_Map.class);
+	     // conf.setCombinerClass(LP_ZGL_Reduce.class);
+	     conf.setReducerClass(LP_ZGL_Reduce.class);
+	
+	     conf.setInputFormat(TextInputFormat.class);
+	     conf.setOutputFormat(TextOutputFormat.class);
+	     
+	     // hyperparameters
+	     conf.set("mu1", Defaults.GetValueOrDie(config, "mu1"));
+	     conf.set("mu2", Defaults.GetValueOrDie(config, "mu2"));
+	     conf.set("keepTopKLabels",
+	    		  Defaults.GetValueOrDefault((String) config.get("keep_top_k_labels"),
+	    				  					 Integer.toString(Integer.MAX_VALUE)));
+
     	 if (iter > 1) {
     		 // output from last iteration is the input for current iteration
     		 currInputFilePat = currOutputFilePat + "/*";

@@ -38,6 +38,7 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.mapred.TextOutputFormat;
+import org.apache.hadoop.mapred.jobcontrol.Job;
 
 import upenn.junto.util.*;
 import upenn.junto.config.*;
@@ -275,42 +276,44 @@ public class MADHadoop {
  	
    public static void main(String[] args) throws Exception {
 	 Hashtable config = ConfigReader.read_config(args);  
-	   
-     JobConf conf = new JobConf(MADHadoop.class);
-     conf.setJobName("mad_hadoop");
 
-     conf.setOutputKeyClass(Text.class);
-     conf.setOutputValueClass(Text.class);
-
-     conf.setMapperClass(MADHadoopMap.class);
-     // conf.setCombinerClass(MADHadoopReduce.class);
-     conf.setReducerClass(MADHadoopReduce.class);
-
-     conf.setInputFormat(TextInputFormat.class);
-     conf.setOutputFormat(TextOutputFormat.class);
-     
      String baseInputFilePat = Defaults.GetValueOrDie(config, "hdfs_input_pattern");
      String baseOutputFilePat = Defaults.GetValueOrDie(config, "hdfs_output_base");
-     int numIterations = Integer.parseInt(Defaults.GetValueOrDie(config, "iters")); 
-     
-     // hyperparameters
-     conf.set("mu1", Defaults.GetValueOrDie(config, "mu1"));
-     conf.set("mu2", Defaults.GetValueOrDie(config, "mu2"));
-     conf.set("mu3", Defaults.GetValueOrDie(config, "mu3"));
-     conf.set("keepTopKLabels",
-    		  Defaults.GetValueOrDefault((String) config.get("keep_top_k_labels"),
-    				  					 Integer.toString(Integer.MAX_VALUE)));
+     int numIterations = Integer.parseInt(Defaults.GetValueOrDie(config, "iters"));
+     int numReducers = Defaults.GetValueOrDefault((String) config.get("num_reducers"), 10);
 
      String currInputFilePat = baseInputFilePat;
      String currOutputFilePat = "";
      for (int iter = 1; iter <= numIterations; ++iter) {
+	     JobConf conf = new JobConf(MADHadoop.class);
+	     conf.setJobName("mad_hadoop");
+	
+	     conf.setOutputKeyClass(Text.class);
+	     conf.setOutputValueClass(Text.class);
+	
+	     conf.setMapperClass(MADHadoopMap.class);
+	     // conf.setCombinerClass(MADHadoopReduce.class);
+	     conf.setReducerClass(MADHadoopReduce.class);
+	     conf.setNumReduceTasks(numReducers);
+	
+	     conf.setInputFormat(TextInputFormat.class);
+	     conf.setOutputFormat(TextOutputFormat.class);
+	     
+	     // hyperparameters
+	     conf.set("mu1", Defaults.GetValueOrDie(config, "mu1"));
+	     conf.set("mu2", Defaults.GetValueOrDie(config, "mu2"));
+	     conf.set("mu3", Defaults.GetValueOrDie(config, "mu3"));
+	     conf.set("keepTopKLabels",
+	    		  Defaults.GetValueOrDefault((String) config.get("keep_top_k_labels"),
+	    				  					 Integer.toString(Integer.MAX_VALUE)));
+
     	 if (iter > 1) {
     		 // output from last iteration is the input for current iteration
     		 currInputFilePat = currOutputFilePat + "/*";
     	 }
     	 FileInputFormat.setInputPaths(conf, new Path(currInputFilePat));
  
-    	 currOutputFilePat = baseOutputFilePat + "_" + iter;
+    	 currOutputFilePat = baseOutputFilePat + "_iter_" + iter;
 	     FileOutputFormat.setOutputPath(conf, new Path(currOutputFilePat));
 
     	 JobClient.runJob(conf);
