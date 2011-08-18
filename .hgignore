@@ -3,6 +3,8 @@ syntax: glob
 
 output/
 netbeans
+.idea/
+src/main/Main.iml
 *.gz
 tmp
 target/
