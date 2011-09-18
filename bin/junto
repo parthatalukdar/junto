@@ -1,9 +1,16 @@
 #!/bin/bash
 
 JARS=`echo $JUNTO_DIR/lib/*.jar $JUNTO_DIR/target/*.jar $JUNTO_DIR/lib_managed/compile/*.jar | tr ' ' ':'`
-SCALA_LIB="$JUNTO_DIR/project/boot/scala-2.9.0/lib/scala-library.jar"
+SCALA_LIB="$JUNTO_DIR/project/boot/scala-2.9.1/lib/scala-library.jar"
 
-CP=$JUNTO_DIR/target/classes:$JARS:$SCALA_LIB:$CLASSPATH
+JARS_MANAGED=
+if [ -e $JUNTO_DIR/lib_managed ]
+then
+    JARS_MANAGED=`find $JUNTO_DIR/lib_managed -name '*.jar' -print | tr '\n' ':'`
+fi
+
+
+CP=$JUNTO_DIR/target/classes:$JARS:$JARS_MANAGED:$SCALA_LIB:$CLASSPATH
 
 if [ -z $JAVA_MEM_FLAG ] 
 then
@@ -31,7 +38,10 @@ EOF
 
 if [ $CMD = 'build' ]; then
 
-    java -jar $JUNTO_DIR/project/build/sbt-launch-0.7.7.jar "$@"
+    if test -f ~/.sbtconfig; then
+	. ~/.sbtconfig
+    fi
+    java -Dfile.encoding=UTF8 -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256m ${SBT_OPTS} -jar $JUNTO_DIR/bin/sbt-launch.jar "$@"
 
 else 
 

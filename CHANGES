@@ -1,3 +1,9 @@
+v 1.2.0
+-------
+ - Added Hadoop implementations of algorithms.
+ - Updated to SBT 0.10.1 (build system).
+
+
 v 1.1
 -----
  - Enabled Junto to be used as an API.
