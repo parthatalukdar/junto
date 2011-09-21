@@ -149,6 +149,12 @@ examples/simple/data directory.
 A more extensive example on prepositional phrase attachment is in
 examples/ppa. See the README in that directory for more details.
 
+Hadoop
+======
+
+If you are interested in trying out the Hadoop implementations, then please 
+look into examples/hadoop/README
+
 
 Bug Reports
 ===========

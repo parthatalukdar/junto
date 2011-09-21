@@ -8,9 +8,9 @@ hdfs_input_pattern = /Users/ppt/input/input_graph_hadoop
 hdfs_output_base = /Users/ppt/output_mad
 
 # number of iterations
-iters = 5
+iters = 10
 
 # hyper-parameters
 mu1 = 1.0
 mu2 = 1e-2
-mu3 = 1e-4
+mu3 = 1e-2
