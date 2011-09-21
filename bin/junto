@@ -25,7 +25,7 @@ shift
 help()
 {
 cat <<EOF
-Junto 1.1 commands: 
+Junto 1.2.0 commands: 
 
   build         build Junto with SBT
   config  	run Junto on the specified config file
