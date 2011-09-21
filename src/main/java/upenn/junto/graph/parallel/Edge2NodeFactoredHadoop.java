@@ -3,10 +3,11 @@ package upenn.junto.graph.parallel;
 import upenn.junto.util.*;
 import upenn.junto.graph.Vertex;
 
-import java.io.IOException;
-import java.util.Iterator;
+import java.io.*;
+import java.util.*;
 
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.*;
+import org.apache.hadoop.conf.*;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -23,109 +24,187 @@ import org.apache.hadoop.mapred.TextOutputFormat;
 
 public class Edge2NodeFactoredHadoop {
 	private static String _kDelim = "\t";
-	private static int kMaxNeighorsPerLine_ = 1000;	
+	private static int kMaxNeighorsPerLine_ = 1000;
 	private static double _kBeta = 2.0;
+
+	private static String neighMsgType = "-NEIGH-";
+	private static String goldLabMsgType = "-GOLD-";
+	private static String injLabMsgType = "-INJ-";
 	
-   public static class Map extends MapReduceBase implements Mapper<LongWritable, Text, Text, Text> {
-     public void map(LongWritable key, Text value,
-    		 		 OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
-       /////
-       // Constructing the vertex from the string representation
-       /////
-       String line = value.toString();
- 
-       // node1 node2 edge_weight
-       String[] fields = line.split(_kDelim);
+	public static class Map extends MapReduceBase implements
+			Mapper<LongWritable, Text, Text, Text> {
+		private HashMap<String,String> goldLabels; 
+		private HashMap<String,String> seedLabels; 
 
-       // source --> dest
-       output.collect(new Text(fields[0]),
-    		   		  new Text(fields[1] + _kDelim + fields[2]));
-       
-	   // dest --> source
-       // generate this message only if source and destination
-       // are different, as otherwise a similar message has already
-       // been generated above.
-       if (!fields[0].equals(fields[1])) {
-    	   output.collect(new Text(fields[1]),
-    			   		  new Text(fields[0] + _kDelim + fields[2]));
-       }
-     }
-   }
-	 	
-   public static class Reduce extends MapReduceBase 
-   				implements Reducer<Text, Text, Text, Text> {
-     public void reduce(Text key, Iterator<Text> values,
-    		 			OutputCollector<Text, Text> output, Reporter reporter) 
-     					throws IOException {
-       String vertexId = key.toString();       
-       Vertex v = new Vertex(vertexId);
+		public void configure(JobConf conf) {
+			goldLabels = LoadLabels(conf.get("gold_label_file"));
+			seedLabels = LoadLabels(conf.get("seed_label_file"));
+		}
 
-       while (values.hasNext()) {
-    	   // neighbor/self edge_weight/inject_score
-    	   String val = values.next().toString();    	  
-    	   String[] fields = val.split(_kDelim);
-    	   
-    	   if (vertexId.equals(fields[0])) {
-    		   v.SetInjectedLabelScore(fields[0], Double.parseDouble(fields[1]));
-    	   } else {
-    		   v.AddNeighbor(fields[0], Double.parseDouble(fields[1]));
-    	   }
-       }
-       
-       // remove dummy labels
-       v.SetInjectedLabelScore(Constants.GetDummyLabel(), 0);
-       v.SetEstimatedLabelScore(Constants.GetDummyLabel(), 0);
+		private HashMap<String,String> LoadLabels(String fileName) {
+			HashMap<String,String> m = new HashMap<String,String>();
+			try {
+				Path p = new Path(fileName);
+				FileSystem fs = FileSystem.get(new Configuration());
+				BufferedReader bfr = new BufferedReader(new InputStreamReader(
+															fs.open(p)));
+				String line;
+				while ((line = bfr.readLine()) != null) {
+					String[] fields = line.split(_kDelim);
+					if (!m.containsKey(fields[0])) {
+						m.put(fields[0], fields[1] + _kDelim + fields[2]);
+					}
+				}
+				bfr.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+			return (m);
+		}
 
-       // calculate random walk probabilities
-       v.CalculateRWProbabilities(_kBeta);
-       
-       // generate the random walk probability string of the node
-       String rwProbStr =
-			Constants._kInjProb + " " + v.GetInjectionProbability() + " " +
-			Constants._kContProb + " " + v.GetContinuationProbability() + " " +					
-			Constants._kTermProb + " " + v.GetTerminationProbability();
-       
-		// represent neighborhood information as a string
-		Object[] neighNames = v.GetNeighborNames();
-		String neighStr = "";
-		int totalNeighbors = neighNames.length;
-		for (int ni = 0; ni < totalNeighbors; ++ni) {
-			// if the neighborhood string is already too long, then
-			// print it out. It is possible to split the neighborhood
-			// information of a node into multiple lines. However, all
-			// other fields should be repeated in all the split lines.
-			if (neighStr.length() > 0 && (ni % kMaxNeighorsPerLine_ == 0)) {
-				// output format
-				// id gold_label injected_labels estimated_labels neighbors rw_probabilities
-				output.collect(key, 
-						new Text(CollectionUtil.Map2String(v.GetGoldLabel()) + _kDelim +
-							CollectionUtil.Map2String(v.GetInjectedLabelScores()) + _kDelim +
-							CollectionUtil.Map2String(v.GetEstimatedLabelScores()) + _kDelim + 
-											 neighStr.trim() + _kDelim +
-											 rwProbStr));
+		public void map(LongWritable key, Text value,
+				OutputCollector<Text, Text> output, Reporter reporter)
+				throws IOException {
+			// ///
+			// Constructing the vertex from the string representation
+			// ///
+			String line = value.toString();
 
-				// reset the neighborhood string
-				neighStr = "";
+			// node1 node2 edge_weight
+			String[] fields = line.split(_kDelim);
+
+			// source --> dest
+			output.collect(new Text(fields[0]), new Text(neighMsgType + _kDelim
+					+ fields[1] + _kDelim + fields[2]));
+			
+			if (goldLabels.containsKey(fields[0])) {
+				output.collect(new Text(fields[0]), 
+						new Text(goldLabMsgType + _kDelim + goldLabels.get(fields[0])));
+			}
+			if (seedLabels.containsKey(fields[0])) {
+				output.collect(new Text(fields[0]), 
+						new Text(injLabMsgType + _kDelim + seedLabels.get(fields[0])));
 			}
 
-			neighStr += neighNames[ni] + " " +
-							v.GetNeighborWeight((String) neighNames[ni]) + " ";
+			// dest --> source
+			// generate this message only if source and destination
+			// are different, as otherwise a similar message has already
+			// been generated above.
+			if (!fields[0].equals(fields[1])) {
+				output.collect(new Text(fields[1]), new Text(neighMsgType
+						+ _kDelim + fields[0] + _kDelim + fields[2]));
+				
+				if (goldLabels.containsKey(fields[1])) {
+					output.collect(new Text(fields[1]), 
+							new Text(goldLabMsgType + _kDelim + goldLabels.get(fields[1])));
+				}
+				
+				if (seedLabels.containsKey(fields[1])) {
+					output.collect(new Text(fields[1]), 
+							new Text(injLabMsgType + _kDelim + seedLabels.get(fields[1])));
+				}
+			}
 		}
-		
-		// print out any remaining neighborhood information, plus all other info
-		if (neighStr.length() > 0) {
-			// output format
-			// id gold_label injected_labels estimated_labels neighbors rw_probabilities
-			output.collect(key, new Text(CollectionUtil.Map2String(v.GetGoldLabel()) + _kDelim +
-										 CollectionUtil.Map2String(v.GetInjectedLabelScores()) + _kDelim +
-										 CollectionUtil.Map2String(v.GetEstimatedLabelScores()) + _kDelim +
-										 neighStr.trim() + _kDelim +
-										 rwProbStr));
+	}
+
+	public static class Reduce extends MapReduceBase implements
+			Reducer<Text, Text, Text, Text> {
+		public void reduce(Text key, Iterator<Text> values,
+				OutputCollector<Text, Text> output, Reporter reporter)
+				throws IOException {
+			String vertexId = key.toString();
+			Vertex v = new Vertex(vertexId);
+
+			while (values.hasNext()) {
+				// neighbor/self edge_weight/inject_score
+				String val = values.next().toString();
+				String[] fields = val.split(_kDelim);
+				String msgType = fields[0];
+				String trgVertexId = fields[1];
+
+				if (msgType.equals(neighMsgType)) {
+					v.AddNeighbor(trgVertexId, Double.parseDouble(fields[2]));
+				} else if (msgType.equals(goldLabMsgType)) {
+					v.SetGoldLabel(trgVertexId, Double.parseDouble(fields[2]));
+				} else if (msgType.equals(injLabMsgType)) {
+					v.SetInjectedLabelScore(trgVertexId,
+							Double.parseDouble(fields[2]));
+				}
+			}
+			
+			// normalize transition probabilities
+			v.NormalizeTransitionProbability();
+
+			// remove dummy labels
+			v.SetInjectedLabelScore(Constants.GetDummyLabel(), 0);
+			v.SetEstimatedLabelScore(Constants.GetDummyLabel(), 0);
+
+			// calculate random walk probabilities
+			v.CalculateRWProbabilities(_kBeta);
+
+			// generate the random walk probability string of the node
+			String rwProbStr = Constants._kInjProb + " "
+					+ v.GetInjectionProbability() + " " + Constants._kContProb
+					+ " " + v.GetContinuationProbability() + " "
+					+ Constants._kTermProb + " "
+					+ v.GetTerminationProbability();
+
+			// represent neighborhood information as a string
+			Object[] neighNames = v.GetNeighborNames();
+			String neighStr = "";
+			int totalNeighbors = neighNames.length;
+			for (int ni = 0; ni < totalNeighbors; ++ni) {
+				// if the neighborhood string is already too long, then
+				// print it out. It is possible to split the neighborhood
+				// information of a node into multiple lines. However, all
+				// other fields should be repeated in all the split lines.
+				if (neighStr.length() > 0 && (ni % kMaxNeighorsPerLine_ == 0)) {
+					// output format
+					// id gold_label injected_labels estimated_labels neighbors
+					// rw_probabilities
+					output.collect(
+							key,
+							new Text(
+									CollectionUtil.Map2String(v.GetGoldLabel())
+											+ _kDelim
+											+ CollectionUtil.Map2String(v
+													.GetInjectedLabelScores())
+											+ _kDelim
+											+ CollectionUtil.Map2String(v
+													.GetEstimatedLabelScores())
+											+ _kDelim + neighStr.trim()
+											+ _kDelim + rwProbStr));
+
+					// reset the neighborhood string
+					neighStr = "";
+				}
+
+				neighStr += neighNames[ni] + " "
+						+ v.GetNeighborWeight((String) neighNames[ni]) + " ";
+			}
+
+			// print out any remaining neighborhood information, plus all other
+			// info
+			if (neighStr.length() > 0) {
+				// output format
+				// id gold_label injected_labels estimated_labels neighbors
+				// rw_probabilities
+				output.collect(
+						key,
+						new Text(CollectionUtil.Map2String(v.GetGoldLabel())
+								+ _kDelim
+								+ CollectionUtil.Map2String(v
+										.GetInjectedLabelScores())
+								+ _kDelim
+								+ CollectionUtil.Map2String(v
+										.GetEstimatedLabelScores()) + _kDelim
+								+ neighStr.trim() + _kDelim + rwProbStr));
+			}
 		}
-     }
-   }
-	
-   public static void main(String[] args) throws Exception {
+	}
+
+	public static void main(String[] args) throws Exception {
 		JobConf conf = new JobConf(Edge2NodeFactoredHadoop.class);
 		conf.setJobName("edge2node_hadoop");
 
@@ -140,7 +219,9 @@ public class Edge2NodeFactoredHadoop {
 		conf.setOutputFormat(TextOutputFormat.class);
 
 		FileInputFormat.setInputPaths(conf, new Path(args[0]));
-		FileOutputFormat.setOutputPath(conf, new Path(args[1]));
+		conf.set("gold_label_file", args[1]);
+		conf.set("seed_label_file", args[2]);
+		FileOutputFormat.setOutputPath(conf, new Path(args[3]));
 
 		JobClient.runJob(conf);
 	}

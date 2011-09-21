@@ -100,7 +100,13 @@ object GraphBuilder {
     val graph = new Graph
 
     // Build the graph from the edges
+    var cnt = 0
     for (edge <- edges) {
+      cnt += 1
+      if (cnt % 1000000 == 0) {
+    	  println("Edges Processed: " + cnt);
+      }
+
       // source -> target
       val dv = graph.AddVertex(edge.source, Constants.GetDummyLabel)
       dv.AddNeighbor(edge.target, edge.weight)
