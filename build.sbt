@@ -1,3 +1,5 @@
+import AssemblyKeys._
+
 name := "Junto"
 
 version := "1.2.0"
@@ -12,7 +14,9 @@ retrieveManaged := true
 
 libraryDependencies += "org.clapper" %% "argot" % "0.3.5"
 
-seq(sbtassembly.Plugin.assemblySettings: _*)
+//seq(sbtassembly.Plugin.assemblySettings: _*)
 
-jarName in Assembly := "junto-assembly.jar"
+seq(assemblySettings: _*)
+
+jarName in assembly := "junto-assembly.jar"
 

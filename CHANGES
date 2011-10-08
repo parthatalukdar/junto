@@ -1,7 +1,7 @@
 v 1.2.1
 -------
  - Fixed mistaken references to "Fogbow" in build.
-
+ - Updated to SBT 0.11.0 (build system).
 
 v 1.2.0
 -------
