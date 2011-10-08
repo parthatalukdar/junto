@@ -1,4 +1,4 @@
-name := "Fogbow"
+name := "Junto"
 
 version := "1.2.0"
 
@@ -14,5 +14,5 @@ libraryDependencies += "org.clapper" %% "argot" % "0.3.5"
 
 seq(sbtassembly.Plugin.assemblySettings: _*)
 
-jarName in Assembly := "fogbow-assembly.jar"
+jarName in Assembly := "junto-assembly.jar"
 

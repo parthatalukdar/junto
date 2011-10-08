@@ -1,3 +1,8 @@
+v 1.2.1
+-------
+ - Fixed mistaken references to "Fogbow" in build.
+
+
 v 1.2.0
 -------
  - Added Hadoop implementations of algorithms.
