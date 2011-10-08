@@ -16,8 +16,8 @@ package upenn.junto.algorithm.parallel;
  * limitations under the License.
  */
 
-import gnu.trove.TObjectDoubleHashMap;
-import gnu.trove.TObjectDoubleIterator;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
+import gnu.trove.iterator.TObjectDoubleIterator;
 
 import java.io.IOException;
 import java.util.HashMap;

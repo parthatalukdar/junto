@@ -1,6 +1,7 @@
 package upenn.junto.type;
 
-import gnu.trove.*;
+import gnu.trove.map.hash.TIntDoubleHashMap;
+import gnu.trove.iterator.TIntDoubleIterator;
 import java.io.*;
 import java.util.*;
 

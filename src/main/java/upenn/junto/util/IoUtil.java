@@ -13,8 +13,8 @@ import java.util.Iterator;
 import upenn.junto.type.ObjectDoublePair;
 import upenn.junto.type.RyanAlphabet;
 
-import gnu.trove.TObjectDoubleHashMap;
-import gnu.trove.TObjectDoubleIterator;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
+import gnu.trove.iterator.TObjectDoubleIterator;
 
 public class IoUtil {
 

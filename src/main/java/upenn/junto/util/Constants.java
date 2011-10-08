@@ -1,6 +1,6 @@
 package upenn.junto.util;
 
-import gnu.trove.TObjectDoubleHashMap;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 
 public class Constants {
 

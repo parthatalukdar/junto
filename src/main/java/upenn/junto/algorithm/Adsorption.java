@@ -12,8 +12,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import gnu.trove.TObjectDoubleHashMap;
-import gnu.trove.TObjectDoubleIterator;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
+import gnu.trove.iterator.TObjectDoubleIterator;
+
 
 public class Adsorption {
 
@@ -53,7 +54,7 @@ public class Adsorption {
           injLabIter.advance();
           v.SetInjectedLabelScore((String) injLabIter.key(), injLabIter.value());
         }
-        v.SetEstimatedLabelScores(v.GetInjectedLabelScores().clone());
+        v.SetEstimatedLabelScores(new TObjectDoubleHashMap<String>(v.GetInjectedLabelScores()));
       } else {
         // remove dummy label
         v.SetEstimatedLabelScore(Constants.GetDummyLabel(), 0.0);				
@@ -202,19 +203,19 @@ public class Adsorption {
 				
         if (false && v.IsSeedNode()) {
           MessagePrinter.PrintAndDie("Should have never reached here!");
-          v.SetEstimatedLabelScores(v.GetInjectedLabelScores().clone());
+          v.SetEstimatedLabelScores(new TObjectDoubleHashMap<String>(v.GetInjectedLabelScores()));
         } else {
           if (!useBipartitieOptimization) {
             deltaLabelDiff += ProbUtil.GetDifferenceNorm2Squarred(
                                                                v.GetEstimatedLabelScores(), 1.0, newDist.get(vName), 1.0);
-            v.SetEstimatedLabelScores(newDist.get(vName).clone());
+            v.SetEstimatedLabelScores(new TObjectDoubleHashMap<String>(newDist.get(vName)));
           } else {
             // update column node labels on odd iterations
             if (Flags.IsColumnNode(vName) && (iter % 2 == 0)) {
               ++totalColumnUpdates;
               deltaLabelDiff += ProbUtil.GetDifferenceNorm2Squarred(
                                                                  v.GetEstimatedLabelScores(), 1.0, newDist.get(vName), 1.0);
-              g._vertices.get(vName).SetEstimatedLabelScores(newDist.get(vName).clone());
+              g._vertices.get(vName).SetEstimatedLabelScores(new TObjectDoubleHashMap<String>(newDist.get(vName)));
             }
 						
             // update entity labels on even iterations
@@ -222,7 +223,7 @@ public class Adsorption {
               ++totalEntityUpdates;
               deltaLabelDiff += ProbUtil.GetDifferenceNorm2Squarred(
                                                                  v.GetEstimatedLabelScores(), 1.0, newDist.get(vName), 1.0);
-              g._vertices.get(vName).SetEstimatedLabelScores(newDist.get(vName).clone());
+              g._vertices.get(vName).SetEstimatedLabelScores(new TObjectDoubleHashMap<String>(newDist.get(vName)));
             }
           }
         }

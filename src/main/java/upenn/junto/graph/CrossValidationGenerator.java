@@ -4,8 +4,8 @@ import upenn.junto.type.ObjectDoublePair;
 import upenn.junto.util.Constants;
 import upenn.junto.util.CollectionUtil;
 
-import gnu.trove.TObjectDoubleHashMap;
-import gnu.trove.TObjectDoubleIterator;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
+import gnu.trove.iterator.TObjectDoubleIterator;
 
 import java.util.ArrayList;
 import java.util.Iterator;

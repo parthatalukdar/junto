@@ -17,7 +17,7 @@ package upenn.junto.config
  */
 
 import java.util.{ArrayList,Hashtable}
-import gnu.trove.TObjectDoubleHashMap
+import gnu.trove.map.hash.TObjectDoubleHashMap
 import upenn.junto.algorithm._
 import upenn.junto.graph._
 import upenn.junto.util._
@@ -83,7 +83,7 @@ object GraphBuilder {
 
   import io.Source
   import scala.collection.JavaConversions._
-  import gnu.trove.TObjectIntHashMap
+  import gnu.trove.map.hash.TObjectIntHashMap
 
   // Create a graph using lots of defaults; no test labels provided
   def apply (edges: List[Edge], seeds: List[Label]): Graph = apply(edges, seeds, List[Label]())

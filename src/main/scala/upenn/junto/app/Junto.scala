@@ -17,7 +17,7 @@ package upenn.junto.app
  */
 
 import java.util.{ArrayList,Hashtable}
-import gnu.trove.TObjectDoubleHashMap
+import gnu.trove.map.hash.TObjectDoubleHashMap
 import upenn.junto.algorithm._
 import upenn.junto.config._
 import upenn.junto.graph._

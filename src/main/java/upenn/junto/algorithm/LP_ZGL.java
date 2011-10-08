@@ -11,9 +11,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import gnu.trove.TDoubleArrayList;
-import gnu.trove.TObjectDoubleHashMap;
-import gnu.trove.TObjectDoubleIterator;
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
+import gnu.trove.iterator.TObjectDoubleIterator;
 
 /**
  * Implementation of the original label propagation algorithm:
@@ -54,7 +54,7 @@ public class LP_ZGL {
 			
       if (v.IsSeedNode()) {
         ++totalSeedNodes;
-        v.SetEstimatedLabelScores(v.GetInjectedLabelScores().clone());
+        v.SetEstimatedLabelScores(new TObjectDoubleHashMap<String>(v.GetInjectedLabelScores()));
       } else {
         v.SetEstimatedLabelScore(Constants.GetDummyLabel(), 0.0);
         ProbUtil.Normalize(v.GetEstimatedLabelScores());
@@ -119,7 +119,7 @@ public class LP_ZGL {
           // normalize newly estimated label scores
           ProbUtil.Normalize(newDist.get(vName), keepTopKLabels);
         } else {
-          newDist.put(v.GetName(), v.GetEstimatedLabelScores().clone());
+          newDist.put(v.GetName(), new TObjectDoubleHashMap<String>(v.GetEstimatedLabelScores()));
         }
       }
 
@@ -140,20 +140,20 @@ public class LP_ZGL {
         // if this is a seed node, then clam back the original
         // injected label distribution.
         if (v.IsSeedNode()) {
-          v.SetEstimatedLabelScores(v.GetInjectedLabelScores().clone());
+          v.SetEstimatedLabelScores(new TObjectDoubleHashMap<String>(v.GetInjectedLabelScores()));
         } else {
           if (!useBipartitieOptimization) {
             deltaLabelDiff +=
               ProbUtil.GetDifferenceNorm2Squarred(v.GetEstimatedLabelScores(), 1.0,
                                                newDist.get(vName), 1.0);
-            v.SetEstimatedLabelScores(newDist.get(vName).clone());
+            v.SetEstimatedLabelScores(new TObjectDoubleHashMap<String>(newDist.get(vName)));
           } else {						
             // update column node labels on odd iterations
             if (Flags.IsColumnNode(vName) && (iter % 2 == 0)) {
               deltaLabelDiff +=
                 ProbUtil.GetDifferenceNorm2Squarred(v.GetEstimatedLabelScores(), 1.0,
                                                  newDist.get(vName), 1.0);
-              g._vertices.get(vName).SetEstimatedLabelScores(newDist.get(vName).clone());
+              g._vertices.get(vName).SetEstimatedLabelScores(new TObjectDoubleHashMap<String>(newDist.get(vName)));
             }
 						
             // update entity labels on even iterations
@@ -161,7 +161,7 @@ public class LP_ZGL {
               deltaLabelDiff +=
                 ProbUtil.GetDifferenceNorm2Squarred(v.GetEstimatedLabelScores(), 1.0,
                                                  newDist.get(vName), 1.0);
-              g._vertices.get(vName).SetEstimatedLabelScores(newDist.get(vName).clone());
+              g._vertices.get(vName).SetEstimatedLabelScores(new TObjectDoubleHashMap<String>(newDist.get(vName)));
             }
           }
         }

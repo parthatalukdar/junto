@@ -11,8 +11,8 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 
-import gnu.trove.TDoubleArrayList;
-import gnu.trove.TObjectDoubleHashMap;
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
 
 import upenn.junto.config.ConfigReader;
 import upenn.junto.util.CollectionUtil;

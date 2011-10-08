@@ -1,7 +1,7 @@
 package upenn.junto.graph;
 
-import gnu.trove.TObjectDoubleHashMap;
-import gnu.trove.TObjectDoubleIterator;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
+import gnu.trove.iterator.TObjectDoubleIterator;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -558,7 +558,7 @@ public class Graph {
       }
     }
 		
-    double[] seedWeightSums = classSeedSum.getValues();
+    double[] seedWeightSums = classSeedSum.values();
     double maxSum = -1;
     for (int wsi = 0; wsi < seedWeightSums.length; ++wsi) {
       if (seedWeightSums[wsi] > maxSum) {

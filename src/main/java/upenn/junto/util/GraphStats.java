@@ -1,6 +1,6 @@
 package upenn.junto.util;
 
-import gnu.trove.TObjectIntHashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

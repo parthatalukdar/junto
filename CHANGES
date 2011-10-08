@@ -2,6 +2,7 @@ v 1.2.1
 -------
  - Fixed mistaken references to "Fogbow" in build.
  - Updated to SBT 0.11.0 (build system).
+ - Updated to Trove 3.0.1.
 
 v 1.2.0
 -------

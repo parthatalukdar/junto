@@ -14,7 +14,7 @@ retrieveManaged := true
 
 libraryDependencies += "org.clapper" %% "argot" % "0.3.5"
 
-//seq(sbtassembly.Plugin.assemblySettings: _*)
+libraryDependencies += "net.sf.trove4j" % "trove4j" % "3.0.1"
 
 seq(assemblySettings: _*)
 

@@ -14,8 +14,8 @@ import upenn.junto.type.RyanAlphabet;
 import upenn.junto.util.Constants;
 import upenn.junto.util.MessagePrinter;
 
-import gnu.trove.TObjectDoubleHashMap;
-import gnu.trove.TObjectDoubleIterator;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
+import gnu.trove.iterator.TObjectDoubleIterator;
 
 public class CollectionUtil {
 

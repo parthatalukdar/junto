@@ -2,8 +2,8 @@ package upenn.junto.graph;
 
 import java.util.ArrayList;
 
-import gnu.trove.TObjectDoubleHashMap;
-import gnu.trove.TObjectDoubleIterator;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
+import gnu.trove.iterator.TObjectDoubleIterator;
 
 import upenn.junto.type.ObjectDoublePair;
 import upenn.junto.type.RyanAlphabet;
@@ -235,7 +235,7 @@ public class Vertex {
     //		if (!isTransitionNormalized) {
     //			NormalizeTransitionProbability();
     //		}
-    TObjectDoubleHashMap neighborClone = this.neighbors_.clone();
+    TObjectDoubleHashMap neighborClone = new TObjectDoubleHashMap(this.neighbors_);
     ProbUtil.Normalize(neighborClone);
 		
     double ent = GetNeighborhoodEntropy(neighborClone);

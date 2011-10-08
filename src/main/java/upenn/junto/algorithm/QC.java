@@ -16,10 +16,10 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 
-import gnu.trove.TDoubleArrayList;
-import gnu.trove.TObjectDoubleHashMap;
-import gnu.trove.TObjectDoubleIterator;
-import gnu.trove.TObjectIntHashMap;
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
+import gnu.trove.iterator.TObjectDoubleIterator;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
 public class QC {
 
@@ -51,7 +51,7 @@ public class QC {
                                   injLabIter.value());
           _allLabels.add((String) injLabIter.key());
         }
-        v.SetEstimatedLabelScores(v.GetInjectedLabelScores().clone());
+        v.SetEstimatedLabelScores(new TObjectDoubleHashMap<String>(v.GetInjectedLabelScores()));
       } else {
         // v.SetEstimatedLabelScore(Constants.GetDummyLabel(), 0.0);
         // v.SetEstimatedLabelScores(Utils.GetUniformPrior(_allLabels));
@@ -180,14 +180,13 @@ public class QC {
         if (false && v.IsSeedNode()) {
           MessagePrinter
             .PrintAndDie("Should have never reached here!");
-          v.SetEstimatedLabelScores(v.GetInjectedLabelScores()
-                                    .clone());
+          v.SetEstimatedLabelScores(new TObjectDoubleHashMap<String>(v.GetInjectedLabelScores()));
         } else {
           if (!useBipartitieOptimization) {
             deltaLabelDiff += ProbUtil.GetDifferenceNorm2Squarred(v
                                                                .GetEstimatedLabelScores(), 1.0, newDist
                                                                .get(vName), 1.0);
-            v.SetEstimatedLabelScores(newDist.get(vName).clone());
+            v.SetEstimatedLabelScores(new TObjectDoubleHashMap<String>(newDist.get(vName)));
           } else {
             // update column node labels on odd iterations
             if (Flags.IsColumnNode(vName) && (iter % 2 == 0)) {
@@ -196,7 +195,7 @@ public class QC {
                                                                  v.GetEstimatedLabelScores(), 1.0,
                                                                  newDist.get(vName), 1.0);
               g._vertices.get(vName).SetEstimatedLabelScores(
-                                                             newDist.get(vName).clone());
+                new TObjectDoubleHashMap<String>(newDist.get(vName)));
             }
 
             // update entity labels on even iterations
@@ -206,7 +205,7 @@ public class QC {
                                                                  v.GetEstimatedLabelScores(), 1.0,
                                                                  newDist.get(vName), 1.0);
               g._vertices.get(vName).SetEstimatedLabelScores(
-                                                             newDist.get(vName).clone());
+                new TObjectDoubleHashMap<String>(newDist.get(vName)));
             }
           }
         }
