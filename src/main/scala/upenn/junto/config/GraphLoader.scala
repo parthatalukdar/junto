@@ -109,12 +109,12 @@ object GraphBuilder {
 
       // source -> target
       val dv = graph.AddVertex(edge.source, Constants.GetDummyLabel)
-      dv.AddNeighbor(edge.target, edge.weight)
+      dv.setNeighbor(edge.target, edge.weight)
       
       // target -> source
       if (!isDirected) {
         val fv = graph.AddVertex(edge.target, Constants.GetDummyLabel)
-        fv.AddNeighbor(edge.source, edge.weight)
+        fv.setNeighbor(edge.source, edge.weight)
       }
     }
 
@@ -131,14 +131,14 @@ object GraphBuilder {
         val vertex = graph._vertices.get(seed.vertex)
         if (vertex != null) {
           // update gold label of the current node
-          vertex.SetGoldLabel(seed.label, seed.score)
+          vertex.setGoldLabel(seed.label, seed.score)
 
           // add current label to the node's injected labels if not
           // already present
           if (currSeedsPerClassCount.get(seed.label) < maxSeedsPerClass 
-              && !vertex.GetInjectedLabelScores.containsKey(seed.label)) {
+              && !vertex.injectedLabels.containsKey(seed.label)) {
             vertex.SetInjectedLabelScore(seed.label, seed.score)
-            vertex.SetSeedNode
+            vertex.isSeedNode = true
             currSeedsPerClassCount.increment(seed.label)
           }
         }
@@ -155,8 +155,8 @@ object GraphBuilder {
       for (node <- testLabels) {
         val vertex = graph._vertices.get(node.vertex)
         assert(vertex != null)
-        vertex.SetGoldLabel(node.label, node.score)
-        vertex.SetTestNode
+        vertex.setGoldLabel(node.label, node.score)
+        vertex.isTestNode = true
       }			
     }
 

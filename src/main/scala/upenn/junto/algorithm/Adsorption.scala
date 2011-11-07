@@ -26,8 +26,8 @@ extends Adsorption (keepTopKLabels, mu1, mu2, mu3) {
 
   // multiplier for MAD update: (p_v_cont * w_vu + p_u_cont * w_uv) where u is neighbor
   def getMultiplier (vName: String, vertex: Vertex, neighName: String, neighbor: Vertex) =
-    (vertex.GetContinuationProbability * vertex.GetNeighborWeight(neighName) +
-     neighbor.GetContinuationProbability * neighbor.GetNeighborWeight(vName))
+    (vertex.pcontinue * vertex.GetNeighborWeight(neighName) +
+     neighbor.pcontinue * neighbor.GetNeighborWeight(vName))
 
 }
 
@@ -40,7 +40,7 @@ extends Adsorption (keepTopKLabels, mu1, mu2, mu3) {
 
   // multiplier for Adsorption update: p_v_cont * w_uv (where u is neighbor)
   def getMultiplier (vName: String, vertex: Vertex, neighName: String, neighbor: Vertex) =
-      vertex.GetContinuationProbability * neighbor.GetNeighborWeight(vName)
+      vertex.pcontinue * neighbor.GetNeighborWeight(vName)
 
   override def normalizeIfNecessary (scores: TObjectDoubleHashMap[String]) { 
     ProbUtil.Normalize(scores) 
@@ -78,13 +78,13 @@ extends LabelPropagationAlgorithm {
       // algorithm doesn't require the scores to be normalized (to start with)
       v.SetInjectedLabelScore(Constants.GetDummyLabel, 0.0)
 
-      if (v.IsSeedNode) {
-        val injLabIter = v.GetInjectedLabelScores.iterator
+      if (v.isSeedNode) {
+        val injLabIter = v.injectedLabels.iterator
         while (injLabIter.hasNext) {
           injLabIter.advance
           v.SetInjectedLabelScore(injLabIter.key.asInstanceOf[String], injLabIter.value)
         }
-        v.SetEstimatedLabelScores(new TObjectDoubleHashMap[String](v.GetInjectedLabelScores))
+        v.SetEstimatedLabelScores(new TObjectDoubleHashMap[String](v.injectedLabels))
       } else {
         // remove dummy label
         v.SetEstimatedLabelScore(Constants.GetDummyLabel, 0.0);				
@@ -120,46 +120,44 @@ extends LabelPropagationAlgorithm {
           val mult = getMultiplier(vName, v, neighName, neigh)
 
           if (verbose)
-            println(v.GetName + " " + v.GetContinuationProbability + " " +
+            println(v.name + " " + v.pcontinue + " " +
                     v.GetNeighborWeight(neighName) + " " +
-                    neigh.GetContinuationProbability + " " + neigh.GetNeighborWeight(vName))
+                    neigh.pcontinue + " " + neigh.GetNeighborWeight(vName))
 
           if (mult <= 0) 
             MessagePrinter.PrintAndDie("Non-positive weighted edge:>>" +
-                                       neigh.GetName + "-->" + v.GetName + "<<" + " " + mult)
+                                       neigh.name + "-->" + v.name + "<<" + " " + mult)
 
-          ProbUtil.AddScores(vertexNewDist, mult * mu2, neigh.GetEstimatedLabelScores)
+          ProbUtil.AddScores(vertexNewDist, mult * mu2, neigh.estimatedLabels)
         }
 				
         if (verbose)
-          println("Before norm: " + v.GetName + " " + ProbUtil.GetSum(vertexNewDist))
+          println("Before norm: " + v.name + " " + ProbUtil.GetSum(vertexNewDist))
 
         normalizeIfNecessary(vertexNewDist)
 								
         if (verbose) 
-          println("After norm: " + v.GetName + " " + ProbUtil.GetSum(vertexNewDist))
+          println("After norm: " + v.name + " " + ProbUtil.GetSum(vertexNewDist))
 				
         // add injection probability
-        ProbUtil.AddScores(vertexNewDist,
-                           v.GetInjectionProbability * mu1,
-                           v.GetInjectedLabelScores)
+        ProbUtil.AddScores(vertexNewDist, v.pinject * mu1, v.injectedLabels)
 	
         if (verbose)
-          println(iter + " after_inj " + v.GetName() + " " +
+          println(iter + " after_inj " + v.name + " " +
                   ProbUtil.GetSum(vertexNewDist) + 
                   " " + CollectionUtil.Map2String(vertexNewDist) +
                   " mu1: " + mu1)
 
         // add dummy label distribution
         ProbUtil.AddScores(vertexNewDist,
-                           v.GetTerminationProbability * mu3,
+                           v.pabandon * mu3,
                            Constants.GetDummyLabelDist)
 				
         if (verbose)
-          println(iter + " after_dummy " + v.GetName() + " " +
+          println(iter + " after_dummy " + v.name + " " +
                   ProbUtil.GetSum(vertexNewDist) + " " +
                   CollectionUtil.Map2String(vertexNewDist) +
-                  " injected: " + CollectionUtil.Map2String(v.GetInjectedLabelScores))
+                  " injected: " + CollectionUtil.Map2String(v.injectedLabels))
 				
         // keep only the top scoring k labels, this is particularly useful
         // when a large number of labels are involved.
@@ -188,7 +186,7 @@ extends LabelPropagationAlgorithm {
 				
         if (!useBipartiteOptimization) {
           deltaLabelDiff += 
-            ProbUtil.GetDifferenceNorm2Squarred(v.GetEstimatedLabelScores, 1.0, 
+            ProbUtil.GetDifferenceNorm2Squarred(v.estimatedLabels, 1.0, 
                                                 vertexNewDist, 1.0)
           v.SetEstimatedLabelScores(vertexNewDist)
         } else {
@@ -196,7 +194,7 @@ extends LabelPropagationAlgorithm {
           if (Flags.IsColumnNode(vName) && (iter % 2 == 0)) {
             totalColumnUpdates += 1
             deltaLabelDiff += 
-              ProbUtil.GetDifferenceNorm2Squarred(v.GetEstimatedLabelScores, 1.0,
+              ProbUtil.GetDifferenceNorm2Squarred(v.estimatedLabels, 1.0,
                                                 vertexNewDist, 1.0)
             v.SetEstimatedLabelScores(vertexNewDist)
           }
@@ -205,7 +203,7 @@ extends LabelPropagationAlgorithm {
           if (!Flags.IsColumnNode(vName) && (iter % 2 == 1)) {
             totalEntityUpdates += 1 
             deltaLabelDiff += 
-              ProbUtil.GetDifferenceNorm2Squarred(v.GetEstimatedLabelScores, 1.0,
+              ProbUtil.GetDifferenceNorm2Squarred(v.estimatedLabels, 1.0,
                                                 vertexNewDist, 1.0)
             v.SetEstimatedLabelScores(vertexNewDist)
           }
@@ -246,20 +244,20 @@ extends LabelPropagationAlgorithm {
     var obj = 0.0
 		
     // difference with injected labels
-    if (v.IsSeedNode)
-      obj += (mu1 * v.GetInjectionProbability *
-              ProbUtil.GetDifferenceNorm2Squarred(v.GetInjectedLabelScores, 1,
-                                                  v.GetEstimatedLabelScores, 1))
+    if (v.isSeedNode)
+      obj += (mu1 * v.pinject *
+              ProbUtil.GetDifferenceNorm2Squarred(v.injectedLabels, 1,
+                                                  v.estimatedLabels, 1))
 		
     // difference with labels of neighbors
     for (neighbor <- v.GetNeighborNames)
       obj += (mu2 * v.GetNeighborWeight(neighbor) *
-              ProbUtil.GetDifferenceNorm2Squarred(v.GetEstimatedLabelScores, 1,
-                                            g._vertices.get(neighbor).GetEstimatedLabelScores, 1))
+              ProbUtil.GetDifferenceNorm2Squarred(v.estimatedLabels, 1,
+                                            g._vertices.get(neighbor).estimatedLabels, 1))
 	    
     // difference with dummy labels
     obj += mu3 * ProbUtil.GetDifferenceNorm2Squarred(
-      Constants.GetDummyLabelDist, v.GetTerminationProbability, v.GetEstimatedLabelScores, 1
+      Constants.GetDummyLabelDist, v.pabandon, v.estimatedLabels, 1
     )
     
     obj

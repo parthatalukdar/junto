@@ -1,4 +1,4 @@
-package upenn.junto.type;
+package upenn.junto.util;
 
 /**
  * Used, e.g., to keep track of an Object and its associated score.

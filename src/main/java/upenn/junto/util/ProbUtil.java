@@ -7,8 +7,8 @@ import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Iterator;
 
-import upenn.junto.type.ObjectDoublePair;
-import upenn.junto.type.RyanAlphabet;
+import upenn.junto.util.ObjectDoublePair;
+import upenn.junto.util.RyanAlphabet;
 import upenn.junto.util.Constants;
 import upenn.junto.util.MessagePrinter;
 

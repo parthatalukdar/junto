@@ -17,7 +17,7 @@ public class GraphEval {
       String vName = vIter.next();
       Vertex v = g._vertices.get(vName);
 			
-      if (v.IsTestNode()) {
+      if (v.isTestNode()) {
         double mrr = v.GetMRR();
         ++total_doc_cnt;
         doc_mrr_sum += mrr;
@@ -39,7 +39,7 @@ public class GraphEval {
       String vName = vIter.next();
       Vertex v = g._vertices.get(vName);
 			
-      if (v.IsTestNode()) {
+      if (v.isTestNode()) {
         double mrr = v.GetMRR();
         ++total_doc_cnt;
         doc_mrr_sum += mrr;
@@ -59,7 +59,7 @@ public class GraphEval {
       String vName = vIter.next();
       Vertex v = g._vertices.get(vName);
 			
-      if (v.IsSeedNode()) {
+      if (v.isSeedNode()) {
         double mrr = v.GetMRR();
         ++total_doc_cnt;
         doc_mrr_sum += mrr;
@@ -79,7 +79,7 @@ public class GraphEval {
       String vName = vIter.next();
       Vertex v = g._vertices.get(vName);
 			
-      if (v.IsTestNode()) {
+      if (v.isTestNode()) {
         totalMSE += v.GetMSE();
         ++totalCount;
       }

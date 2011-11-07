@@ -1,7 +1,7 @@
 #!/bin/bash
 
 JARS=`echo $JUNTO_DIR/lib/*.jar $JUNTO_DIR/target/*.jar $JUNTO_DIR/lib_managed/compile/*.jar | tr ' ' ':'`
-SCALA_LIB="$JUNTO_DIR/project/boot/scala-2.9.1/lib/scala-library.jar"
+SCALA_LIB="$HOME/.sbt/boot/scala-2.9.1/lib/scala-library.jar"
 
 JARS_MANAGED=
 if [ -e $JUNTO_DIR/lib_managed ]

@@ -10,8 +10,8 @@ import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Iterator;
 
-import upenn.junto.type.ObjectDoublePair;
-import upenn.junto.type.RyanAlphabet;
+import upenn.junto.util.ObjectDoublePair;
+import upenn.junto.util.RyanAlphabet;
 
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 import gnu.trove.iterator.TObjectDoubleIterator;

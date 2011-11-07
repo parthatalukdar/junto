@@ -5,6 +5,12 @@ v 1.2.2
    to classes with simple class hierarchy for LP algorithms. Removed
    QC algorithm in prep for more changes to API. (Baldridge)
 
+ - Ported Vertex to Scala and simplified, updated other classes that
+   use it. (Baldridge)
+
+ - Moved classes in junto.type to junto.util because "type" is a
+   reserved word in Scala. (Baldridge)
+
 
 v 1.2.1
 -------

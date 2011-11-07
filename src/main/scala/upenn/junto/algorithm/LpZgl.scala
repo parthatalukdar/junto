@@ -41,14 +41,14 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
       // may not be valid probability distributions, but that is fine as the
       // algorithm doesn't require the scores to be normalized (to start with)
       v.SetInjectedLabelScore(Constants.GetDummyLabel, 0.0)
-      ProbUtil.Normalize(v.GetInjectedLabelScores)
+      ProbUtil.Normalize(v.injectedLabels)
 			
-      if (v.IsSeedNode) {
+      if (v.isSeedNode) {
         totalSeedNodes += 1
-        v.SetEstimatedLabelScores(new TObjectDoubleHashMap[String](v.GetInjectedLabelScores))
+        v.SetEstimatedLabelScores(new TObjectDoubleHashMap[String](v.injectedLabels))
       } else {
         v.SetEstimatedLabelScore(Constants.GetDummyLabel, 0.0)
-        ProbUtil.Normalize(v.GetEstimatedLabelScores)
+        ProbUtil.Normalize(v.estimatedLabels)
       }
     }
 		
@@ -76,11 +76,11 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
 				
         // if the current node is a seed node, then there is no need
         // to estimate new labels.
-        if (!v.IsSeedNode) {
+        if (!v.isSeedNode) {
           // if not present already, create a new label score map
           // for the current hash map. otherwise, it is an error
           if (!newDist.containsKey(vName))
-            newDist.put(vName, new TObjectDoubleHashMap[String]())
+            newDist.put(vName, new TObjectDoubleHashMap[String])
           else
             MessagePrinter.PrintAndDie("Duplicate node found: " + vName)
 					
@@ -90,17 +90,17 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
             val mult = neigh.GetNeighborWeight(vName)
             if (mult <= 0)
               MessagePrinter.PrintAndDie("Zero weight edge: " +
-                                         neigh.GetName() + " --> " + v.GetName)
+                                         neigh.name + " --> " + v.name)
 	
             ProbUtil.AddScores(newDist.get(vName),
                                mult * mu2,
-                               neigh.GetEstimatedLabelScores)
+                               neigh.estimatedLabels)
           }
 	
           // normalize newly estimated label scores
           ProbUtil.Normalize(newDist.get(vName), keepTopKLabels)
         } else {
-          newDist.put(v.GetName, new TObjectDoubleHashMap[String](v.GetEstimatedLabelScores))
+          newDist.put(v.name, new TObjectDoubleHashMap[String](v.estimatedLabels))
         }
       }
 
@@ -115,19 +115,19 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
 				
         // if this is a seed node, then clam back the original
         // injected label distribution.
-        if (v.IsSeedNode) {
-          v.SetEstimatedLabelScores(new TObjectDoubleHashMap[String](v.GetInjectedLabelScores))
+        if (v.isSeedNode) {
+          v.SetEstimatedLabelScores(new TObjectDoubleHashMap[String](v.injectedLabels))
         } else {
           if (!useBipartiteOptimization) {
             deltaLabelDiff +=
-              ProbUtil.GetDifferenceNorm2Squarred(v.GetEstimatedLabelScores, 1.0,
+              ProbUtil.GetDifferenceNorm2Squarred(v.estimatedLabels, 1.0,
                                                   newDist.get(vName), 1.0);
             v.SetEstimatedLabelScores(new TObjectDoubleHashMap[String](newDist.get(vName)))
           } else {						
             // update column node labels on odd iterations
             if (Flags.IsColumnNode(vName) && (iter % 2 == 0)) {
               deltaLabelDiff +=
-                ProbUtil.GetDifferenceNorm2Squarred(v.GetEstimatedLabelScores, 1.0,
+                ProbUtil.GetDifferenceNorm2Squarred(v.estimatedLabels, 1.0,
                                                     newDist.get(vName), 1.0)
               v.SetEstimatedLabelScores(new TObjectDoubleHashMap[String](newDist.get(vName)))
             }
@@ -135,7 +135,7 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
             // update entity labels on even iterations
             if (!Flags.IsColumnNode(vName) && (iter % 2 == 1)) {
               deltaLabelDiff +=
-                ProbUtil.GetDifferenceNorm2Squarred(v.GetEstimatedLabelScores, 1.0,
+                ProbUtil.GetDifferenceNorm2Squarred(v.estimatedLabels, 1.0,
                                                     newDist.get(vName), 1.0)
               v.SetEstimatedLabelScores(new TObjectDoubleHashMap[String](newDist.get(vName)))
             }
@@ -176,15 +176,15 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
     var obj = 0.0
 		
     // difference with injected labels
-    if (v.IsSeedNode)
-      obj += ProbUtil.GetDifferenceNorm2Squarred(v.GetInjectedLabelScores, 1,
-                                                 v.GetEstimatedLabelScores, 1)
+    if (v.isSeedNode)
+      obj += ProbUtil.GetDifferenceNorm2Squarred(v.injectedLabels, 1,
+                                                 v.estimatedLabels, 1)
     // difference with labels of neighbors
     for (neighbor <- v.GetNeighborNames)
       obj += (v.GetNeighborWeight(neighbor) *
               ProbUtil.GetDifferenceNorm2Squarred(
-                v.GetEstimatedLabelScores, 1,
-                g._vertices.get(neighbor).GetEstimatedLabelScores, 1))
+                v.estimatedLabels, 1,
+                g._vertices.get(neighbor).estimatedLabels, 1))
 	    
     obj
   }

@@ -124,9 +124,9 @@ public class Edge2NodeFactoredHadoop {
 				String trgVertexId = fields[1];
 
 				if (msgType.equals(neighMsgType)) {
-					v.AddNeighbor(trgVertexId, Double.parseDouble(fields[2]));
+					v.setNeighbor(trgVertexId, Double.parseDouble(fields[2]));
 				} else if (msgType.equals(goldLabMsgType)) {
-					v.SetGoldLabel(trgVertexId, Double.parseDouble(fields[2]));
+					v.setGoldLabel(trgVertexId, Double.parseDouble(fields[2]));
 				} else if (msgType.equals(injLabMsgType)) {
 					v.SetInjectedLabelScore(trgVertexId,
 							Double.parseDouble(fields[2]));
@@ -145,10 +145,10 @@ public class Edge2NodeFactoredHadoop {
 
 			// generate the random walk probability string of the node
 			String rwProbStr = Constants._kInjProb + " "
-					+ v.GetInjectionProbability() + " " + Constants._kContProb
-					+ " " + v.GetContinuationProbability() + " "
+					+ v.pinject() + " " + Constants._kContProb
+					+ " " + v.pcontinue() + " "
 					+ Constants._kTermProb + " "
-					+ v.GetTerminationProbability();
+					+ v.pabandon();
 
 			// represent neighborhood information as a string
 			Object[] neighNames = v.GetNeighborNames();
@@ -166,13 +166,13 @@ public class Edge2NodeFactoredHadoop {
 					output.collect(
 							key,
 							new Text(
-									CollectionUtil.Map2String(v.GetGoldLabel())
+									CollectionUtil.Map2String(v.goldLabels())
 											+ _kDelim
 											+ CollectionUtil.Map2String(v
-													.GetInjectedLabelScores())
+													.injectedLabels())
 											+ _kDelim
 											+ CollectionUtil.Map2String(v
-													.GetEstimatedLabelScores())
+													.estimatedLabels())
 											+ _kDelim + neighStr.trim()
 											+ _kDelim + rwProbStr));
 
@@ -192,13 +192,13 @@ public class Edge2NodeFactoredHadoop {
 				// rw_probabilities
 				output.collect(
 						key,
-						new Text(CollectionUtil.Map2String(v.GetGoldLabel())
+						new Text(CollectionUtil.Map2String(v.goldLabels())
 								+ _kDelim
 								+ CollectionUtil.Map2String(v
-										.GetInjectedLabelScores())
+										.injectedLabels())
 								+ _kDelim
 								+ CollectionUtil.Map2String(v
-										.GetEstimatedLabelScores()) + _kDelim
+										.estimatedLabels()) + _kDelim
 								+ neighStr.trim() + _kDelim + rwProbStr));
 			}
 		}

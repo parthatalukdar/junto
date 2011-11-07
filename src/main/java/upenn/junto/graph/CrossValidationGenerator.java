@@ -1,6 +1,6 @@
 package upenn.junto.graph;
 
-import upenn.junto.type.ObjectDoublePair;
+import upenn.junto.util.ObjectDoublePair;
 import upenn.junto.util.Constants;
 import upenn.junto.util.CollectionUtil;
 
@@ -26,8 +26,8 @@ public class CrossValidationGenerator {
 			
       // nodes without feature prefix and those with at least one
       // gold labels are considered valid instances
-      if (!v.GetName().startsWith(Constants.GetFeatPrefix()) &&
-          v.GetGoldLabel().size() > 0) {
+      if (!v.name().startsWith(Constants.GetFeatPrefix()) &&
+          v.goldLabels().size() > 0) {
         instanceVertices.put(v, r.nextDouble());
       }
     }
@@ -42,17 +42,17 @@ public class CrossValidationGenerator {
 			
       // mark train and test nodes
       if (vi < totalTrainInstances) {
-        v.SetSeedNode();
+        v.setIsSeedNode(true);
 				
         // we expect that the gold labels for the node has already been
         // set, we only need to copy them as injected labels
-        TObjectDoubleIterator goldLabIter = v.GetGoldLabel().iterator();
+        TObjectDoubleIterator goldLabIter = v.goldLabels().iterator();
         while (goldLabIter.hasNext()) {
           goldLabIter.advance();
           v.SetInjectedLabelScore((String) goldLabIter.key(), goldLabIter.value());
         }
       } else {
-        v.SetTestNode();
+        v.setIsTestNode(true);
       }
     }
 		
@@ -61,10 +61,10 @@ public class CrossValidationGenerator {
     //		int totalTestNodes = 0;
     //		for (int vi = 0; vi < totalInstances; ++vi) {
     //			Vertex v = (Vertex) sortedRandomInstances.get(vi).GetLabel();
-    //			if (v.IsSeedNode()) {
+    //			if (v.isSeedNode()) {
     //				++totalTrainNodes;
     //			}
-    //			if (v.IsTestNode()) {
+    //			if (v.isTestNode()) {
     //				++totalTestNodes;
     //			}
     //		}

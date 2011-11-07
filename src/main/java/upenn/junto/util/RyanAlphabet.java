@@ -9,7 +9,7 @@
  @author Andrew McCallum <a href="mailto:mccallum@cs.umass.edu">mccallum@cs.umass.edu</a>
  */
 
-package upenn.junto.type;
+package upenn.junto.util;
 
 import java.util.ArrayList;
 import java.io.*;

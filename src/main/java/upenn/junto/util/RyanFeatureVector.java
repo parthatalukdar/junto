@@ -1,4 +1,4 @@
-package upenn.junto.type;
+package upenn.junto.util;
 
 import gnu.trove.map.hash.TIntDoubleHashMap;
 import gnu.trove.iterator.TIntDoubleIterator;

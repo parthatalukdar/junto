@@ -18,8 +18,8 @@ import java.util.Random;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
-import upenn.junto.type.ObjectDoublePair;
-import upenn.junto.type.RyanAlphabet;
+import upenn.junto.util.ObjectDoublePair;
+import upenn.junto.util.RyanAlphabet;
 import upenn.junto.util.CollectionUtil;
 import upenn.junto.util.Constants;
 import upenn.junto.util.MessagePrinter;
@@ -49,9 +49,9 @@ public class Graph {
     // is present but it doesn't have a valid label assigned, then
     // update its label
     if (v == null) {
-      _vertices.put(name, new Vertex(name, label, weight));
+      _vertices.put(name, Vertex.apply(name, label, weight));
     } else {
-      v.SetGoldLabel(label, weight);
+      v.setGoldLabel(label, weight);
     }
     return _vertices.get(name);
   }
@@ -74,13 +74,13 @@ public class Graph {
       // if a node has lower than certain number of neighbors, then
       // that node can be filtered out, also the node should be a
       // feature node.
-      if (/*v.GetName().startsWith(Constants.GetFeatPrefix()) &&*/
+      if (/*v.name().startsWith(Constants.GetFeatPrefix()) &&*/
           v.GetNeighborNames().length <= minNeighborCount) {
         // make the node isolated
         Object[] neighNames = v.GetNeighborNames();
         for (int ni = 0; ni < neighNames.length; ++ni) {
-          v.RemoveNeighbor((String) neighNames[ni]);
-          _vertices.get(neighNames[ni]).RemoveNeighbor(v.GetName());					
+          v.neighbors().remove((String) neighNames[ni]);
+          _vertices.get(neighNames[ni]).neighbors().remove(v.name());
         }
 				
         // now remove the vertex from the vertex list
@@ -103,13 +103,13 @@ public class Graph {
       // if a node has lower than certain number of neighbors, then
       // that node can be filtered out, also the node should be a
       // feature node.
-      if (v.GetName().startsWith(Constants.GetFeatPrefix()) &&
+      if (v.name().startsWith(Constants.GetFeatPrefix()) &&
           v.GetNeighborNames().length <= minNeighborCount) {
         // make the node isolated
         Object[] neighNames = v.GetNeighborNames();
         for (int ni = 0; ni < neighNames.length; ++ni) {
-          v.RemoveNeighbor((String) neighNames[ni]);
-          _vertices.get(neighNames[ni]).RemoveNeighbor(v.GetName());					
+          v.neighbors().remove((String) neighNames[ni]);
+          _vertices.get(neighNames[ni]).neighbors().remove(v.name());					
         }
 				
         // now remove the vertex from the vertex list
@@ -130,13 +130,13 @@ public class Graph {
       // if a node has higher than certain number of neighbors, then
       // that node can be filtered out, also the node should be a
       // feature node.
-      if (/*v.GetName().startsWith(Constants.GetFeatPrefix()) &&*/
+      if (/*v.name().startsWith(Constants.GetFeatPrefix()) &&*/
           v.GetNeighborNames().length >= maxNeighborCount) {
         // make the node isolated
         Object[] neighNames = v.GetNeighborNames();
         for (int ni = 0; ni < neighNames.length; ++ni) {
-          v.RemoveNeighbor((String) neighNames[ni]);
-          _vertices.get(neighNames[ni]).RemoveNeighbor(v.GetName());					
+          v.neighbors().remove((String) neighNames[ni]);
+          _vertices.get(neighNames[ni]).neighbors().remove(v.name());					
         }
 				
         // now remove the vertex from the vertex list
@@ -157,13 +157,13 @@ public class Graph {
       // if a feature node has higher than certain number of neighbors, then
       // that node can be filtered out, also the node should be a
       // feature node.
-      if (v.GetName().startsWith(Constants.GetFeatPrefix()) &&
+      if (v.name().startsWith(Constants.GetFeatPrefix()) &&
           v.GetNeighborNames().length >= maxNeighborCount) {
         // make the node isolated
         Object[] neighNames = v.GetNeighborNames();
         for (int ni = 0; ni < neighNames.length; ++ni) {
-          v.RemoveNeighbor((String) neighNames[ni]);
-          _vertices.get(neighNames[ni]).RemoveNeighbor(v.GetName());					
+          v.neighbors().remove((String) neighNames[ni]);
+          _vertices.get(neighNames[ni]).neighbors().remove(v.name());					
         }
 				
         // now remove the vertex from the vertex list
@@ -196,7 +196,7 @@ public class Graph {
       // remove everything after after the top-K neighbors.
       totalNeighbors = sortedNeighList.size();
       for (int sni = K; sni < totalNeighbors; ++sni) {
-        v.RemoveNeighbor((String) sortedNeighList.get(sni).GetLabel());
+        v.neighbors().remove((String) sortedNeighList.get(sni).GetLabel());
       }
 			
       totalEdges += v.GetNeighborNames().length;
@@ -213,8 +213,8 @@ public class Graph {
         Vertex neigh = _vertices.get(neighNames[ni]);
 				
         // if the reverse edge is not present, then add it
-        if (neigh.GetNeighborWeight(v.GetName()) == 0) {
-          neigh.AddNeighbor(v.GetName(),
+        if (neigh.GetNeighborWeight(v.name()) == 0) {
+          neigh.setNeighbor(v.name(),
                             v.GetNeighborWeight((String) neighNames[ni]));
           ++totalEdges;
         }
@@ -230,16 +230,16 @@ public class Graph {
 
     for (String vName : this._vertices.keySet()) {
       Vertex v = this._vertices.get(vName);
-      if (v.IsTestNode()) {
-        TObjectDoubleIterator labelIter = v.GetGoldLabel().iterator();
+      if (v.isTestNode()) {
+        TObjectDoubleIterator labelIter = v.goldLabels().iterator();
         while (labelIter.hasNext()) {
           labelIter.advance();
           testLabels.adjustOrPutValue((String) labelIter.key(), 1, 1);
         }
       }
 			
-      if (v.IsSeedNode()) {
-        Object[] injLabels= v.GetInjectedLabelScores().keys();
+      if (v.isSeedNode()) {
+        Object[] injLabels= v.injectedLabels().keys();
         for (int li = 0; li < injLabels.length; ++li) {
           seedLabels.adjustOrPutValue((String) injLabels[li], 1, 1);
         }
@@ -271,8 +271,8 @@ public class Graph {
     TObjectDoubleHashMap<String> testLabels = new TObjectDoubleHashMap<String>();
     for (String vName : this._vertices.keySet()) {
       Vertex v = this._vertices.get(vName);
-      if (v.IsTestNode()) {
-        TObjectDoubleIterator labelIter = v.GetGoldLabel().iterator();
+      if (v.isTestNode()) {
+        TObjectDoubleIterator labelIter = v.goldLabels().iterator();
         while (labelIter.hasNext()) {
           labelIter.advance();
           testLabels.adjustOrPutValue((String) labelIter.key(), 1, 1);
@@ -289,13 +289,13 @@ public class Graph {
     // present in any of the test nodes.
     for (String vName : this._vertices.keySet()) {
       Vertex v = this._vertices.get(vName);
-      if (v.IsSeedNode()) {
-        Object[] injLabels= v.GetInjectedLabelScores().keys();
+      if (v.isSeedNode()) {
+        Object[] injLabels= v.injectedLabels().keys();
         for (int li = 0; li < injLabels.length; ++li) {
           if (!testLabels.contains(injLabels[li])) {
             v.RemoveInjectedLabel((String) injLabels[li]);
-            if (v.GetInjectedLabelScores().size() == 0) {
-              v.ResetSeedNode();
+            if (v.injectedLabels().size() == 0) {
+              v.setIsSeedNode(false);
             }
 						
             if (!trainOnlyLabels.contains((String) injLabels[li])) {
@@ -313,13 +313,13 @@ public class Graph {
     // label which is present in one of the test and in none of the train nodes
     for (String vName : this._vertices.keySet()) {
       Vertex v = this._vertices.get(vName);
-      if (v.IsTestNode()) {
-        Object[] goldLabels= v.GetGoldLabel().keys();
+      if (v.isTestNode()) {
+        Object[] goldLabels= v.goldLabels().keys();
         for (int li = 0; li < goldLabels.length; ++li) {
           if (!trainLabels.contains(goldLabels[li])) {
-            v.RemoveGoldLabel((String) goldLabels[li]);
-            if (v.GetGoldLabel().size() == 0) {
-              v.ResetTestNode();
+            v.goldLabels().remove((String) goldLabels[li]);
+            if (v.goldLabels().size() == 0) {
+              v.setIsTestNode(false);
             }						
           }
         }
@@ -342,7 +342,7 @@ public class Graph {
         String vName = vIter.next();
         Vertex v = _vertices.get(vName);
 				
-        if (v.IsTestNode()) {
+        if (v.isTestNode()) {
           double mrr = v.GetMRR();
           ++total_doc_cnt;
           doc_mrr_sum += mrr;
@@ -350,11 +350,11 @@ public class Graph {
             ++correct_doc_cnt;
           }
         }
-        bw.write(v.GetName() + kDelim_ +
-                 CollectionUtil.Map2String(v.GetGoldLabel(), _labelAlphabet) + kDelim_ +
-                 v.GetInjectedLabelScoresPretty(this._labelAlphabet) + kDelim_ +
-                 v.GetEstimatedLabelScoresPretty(this._labelAlphabet) + kDelim_ +
-                 v.IsTestNode() + kDelim_ +
+        bw.write(v.name() + kDelim_ +
+                 CollectionUtil.Map2String(v.goldLabels(), _labelAlphabet) + kDelim_ +
+                 v.getPrettyPrintMap(v.injectedLabels(), this._labelAlphabet) + kDelim_ +
+                 v.getPrettyPrintMap(v.estimatedLabels(), this._labelAlphabet) + kDelim_ +
+                 v.isTestNode() + kDelim_ +
                  v.GetMRR() + "\n");
       }
       bw.close();
@@ -374,46 +374,6 @@ public class Graph {
     }
   }
 	
-  //	public void WriteToFile(String outputFile) {
-  //		try {
-  //			BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile));
-  //			Iterator<String> vIter = _vertices.keySet().iterator();			
-  //			while (vIter.hasNext()) {
-  //				String vName = vIter.next();
-  //				Vertex v = _vertices.get(vName);
-  //				Object[] neighNames = v.GetNeighborNames();
-  //				String neighStr = "";
-  //				int totalNeighbors = neighNames.length;
-  //				for (int ni = 0; ni < totalNeighbors; ++ni) {
-  //					Vertex n = _vertices.get(neighNames[ni]);
-  //					
-  //					neighStr += neighNames[ni] + " " +
-  //									v.GetNeighborWeight((String) neighNames[ni]);
-  //					if (ni < totalNeighbors - 1) {
-  //						neighStr += " ";
-  //					}
-  //				}
-  //				
-  //				String rwProbStr =
-  //					CollectionUtil._kInjProb + " " + v.GetInjectionProbability() + " " +
-  //					CollectionUtil._kContProb + " " + v.GetContinuationProbability() + " " +					
-  //					CollectionUtil._kTermProb + " " + v.GetTerminationProbability();
-  //				
-  //				// output format
-  //				// id gold_label injected_labels estimated_labels neighbors rw_probabilities
-  //				bw.write(v.GetName() + kDelim_ +
-  //						CollectionUtil.Map2String(v.GetGoldLabel(), _labelAlphabet) + kDelim_ +
-  //						CollectionUtil.Map2String(v.GetInjectedLabelScores(), _labelAlphabet) + kDelim_ +
-  //						CollectionUtil.Map2String(v.GetEstimatedLabelScores(), _labelAlphabet) + kDelim_ +
-  //						neighStr + kDelim_ +
-  //						rwProbStr + "\n");
-  //			}
-  //			bw.close();
-  //		} catch (IOException ioe) {
-  //			ioe.printStackTrace();
-  //		}
-  //	}
-	
   public DefaultDirectedWeightedGraph<Vertex,DefaultWeightedEdge> GetJGraphTGraph() {
     DefaultDirectedWeightedGraph<Vertex,DefaultWeightedEdge> g2 =
       new DefaultDirectedWeightedGraph<Vertex, DefaultWeightedEdge>(DefaultWeightedEdge.class);
@@ -422,7 +382,7 @@ public class Graph {
       Vertex v = this._vertices.get(vName);
       g2.addVertex(v);
 			
-      for (Object nName : this._vertices.get(vName).GetNeighbors().keys()) {
+      for (Object nName : this._vertices.get(vName).neighbors().keys()) {
         Vertex nv = this._vertices.get(nName);
         g2.addVertex(nv);
 				
@@ -454,7 +414,7 @@ public class Graph {
         int vIdx = alpha.lookupIndex(vName, true);
 				
         // seed node writer
-        if (_vertices.get(vName).IsSeedNode()) {
+        if (_vertices.get(vName).isSeedNode()) {
           seedWriter.write(vIdx + "\t" + vIdx + "\t" + 1.0 + "\n");
         }
 
@@ -488,7 +448,7 @@ public class Graph {
 		
     for (String vName : this._vertices.keySet()) {
       Vertex v = this._vertices.get(vName);
-      TObjectDoubleIterator nIter = v.GetNeighbors().iterator();
+      TObjectDoubleIterator nIter = v.neighbors().iterator();
       while (nIter.hasNext()) {
         nIter.advance();
         String nName = (String) nIter.key();
@@ -500,7 +460,7 @@ public class Graph {
         //				MessagePrinter.Print("Weights: " + currWeight + " avg: " + avgEdgeWeight +
         //						" " + sigmaSquarred + " " + newWeight);
 				
-        v.SetNeighborWeight(nName, newWeight);
+        v.neighbors().put(nName, newWeight);
       }	
     }
   }
@@ -511,7 +471,7 @@ public class Graph {
 
     for (String vName : this._vertices.keySet()) {
       Vertex v = this._vertices.get(vName);
-      TObjectDoubleIterator nIter = v.GetNeighbors().iterator();
+      TObjectDoubleIterator nIter = v.neighbors().iterator();
       while (nIter.hasNext()) {
         nIter.advance();
         ++totalEdges;
@@ -542,8 +502,8 @@ public class Graph {
     while (viter0.hasNext()) {
       String vName = viter0.next();
       Vertex v = _vertices.get(vName);
-      if (v.IsSeedNode()) {
-        TObjectDoubleIterator injLabIter = v.GetInjectedLabelScores().iterator();
+      if (v.isSeedNode()) {
+        TObjectDoubleIterator injLabIter = v.injectedLabels().iterator();
         while (injLabIter.hasNext()) {
           injLabIter.advance();
           double currVal = classSeedSum.containsKey(injLabIter.key()) ?
@@ -580,8 +540,8 @@ public class Graph {
     while (viter.hasNext()) {
       String vName = viter.next();
       Vertex v = _vertices.get(vName);
-      if (v.IsSeedNode()) {				
-        TObjectDoubleIterator injLabIter = v.GetInjectedLabelScores().iterator(); 
+      if (v.isSeedNode()) {				
+        TObjectDoubleIterator injLabIter = v.injectedLabels().iterator(); 
         while (injLabIter.hasNext()) {
           injLabIter.advance();
 					
@@ -622,8 +582,8 @@ public class Graph {
         Vertex v = this._vertices.get(fields[0]);
         if (v != null) {
           //					int li = labelAlphabet_.lookupIndex(fields[1], true);
-          //					v.SetGoldLabel(Integer.toString(li), Double.parseDouble(fields[2]));
-          v.SetGoldLabel(fields[1], Double.parseDouble(fields[2]));
+          //					v.setGoldLabel(Integer.toString(li), Double.parseDouble(fields[2]));
+          v.setGoldLabel(fields[1], Double.parseDouble(fields[2]));
         }
       }
       gbr.close();

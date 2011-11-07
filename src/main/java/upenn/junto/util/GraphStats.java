@@ -52,11 +52,11 @@ public class GraphStats {
       if (degree > maxDegree) { maxDegree = degree; } 
       if (degree < minDegree) { minDegree = degree; } 
 
-      totalEdges += v.GetNeighbors().size();
+      totalEdges += v.neighbors().size();
 			
-      if (v.IsSeedNode()) { ++totalSeedNodes; }
-      if (v.IsTestNode()) { ++totalTestNodes; }
-      if (v.IsSeedNode() && v.IsTestNode()) { ++totalSeedAndTestNodes; }
+      if (v.isSeedNode()) { ++totalSeedNodes; }
+      if (v.isTestNode()) { ++totalTestNodes; }
+      if (v.isSeedNode() && v.isTestNode()) { ++totalSeedAndTestNodes; }
     }
 		
     //		DefaultDirectedWeightedGraph<Vertex,DefaultWeightedEdge> g2 = g.GetJGraphTGraph();
@@ -99,7 +99,7 @@ public class GraphStats {
     Iterator<Vertex> vIter = g.vertexSet().iterator();
     while (vIter.hasNext()) {
       Vertex v = vIter.next();
-      if (!v.IsSeedNode()) {
+      if (!v.isSeedNode()) {
         continue;
       }
 			
