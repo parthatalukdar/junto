@@ -42,10 +42,10 @@ public class Vertex {
 	
   // neighbors of the vertex along with edge/association
   // weight
-  private TObjectDoubleHashMap neighbors_;
+  private TObjectDoubleHashMap<String> neighbors_;
 	
   // gold label (if any of the vertex); optional
-  private TObjectDoubleHashMap goldLabel_;
+  private TObjectDoubleHashMap<String> goldLabel_;
 	
   // set to true if the node is injected with seed labels
   private boolean isSeedNode_;
@@ -136,8 +136,8 @@ public class Vertex {
     neighbors_.put(n, w);
   }
 	
-  public Object[] GetNeighborNames() {
-    return neighbors_.keys();
+  public String[] GetNeighborNames() {
+    return neighbors_.keys(new String[0]);
   }
 	
   public TObjectDoubleHashMap GetNeighbors() {

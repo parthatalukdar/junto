@@ -28,37 +28,47 @@ import upenn.junto.util._
  */
 object JuntoRunner {
 
-  def apply (graph: Graph): Unit = apply(graph, 1.0, .01, .01, 10, false)
+  def apply (graph: Graph) {
+    apply(graph, 1.0, .01, .01, 10, false)
+  }
 
-  def apply (graph: Graph, mu1: Double, mu2: Double, mu3: Double, maxIters: Int, verbose: Boolean): Unit = 
+  def apply (graph: Graph, mu1: Double, mu2: Double, mu3: Double, 
+             maxIters: Int, verbose: Boolean) { 
     apply("mad", graph, maxIters, mu1, mu2, mu3, Integer.MAX_VALUE, 
-          false, verbose, new ArrayList[TObjectDoubleHashMap[String]]())
+          false, verbose, new ArrayList[Map[String,Double]])
+  }
 
   def apply (algo: String, graph: Graph, maxIters: Int, 
              mu1: Double, mu2: Double, mu3: Double,
              keepTopKLabels: Int, useBipartiteOptimization: Boolean,
-             verbose: Boolean, resultList: ArrayList[TObjectDoubleHashMap[String]]): Unit = {
+             verbose: Boolean, resultList: ArrayList[Map[String,Double]]) {
 
-    algo match {
-      case "adsorption" => {
+    val propagator = algo match {
+
+      case "adsorption" =>
         MessagePrinter.Print("Using " + algo + " ...\n")
-        Adsorption.Run(graph, maxIters, "original", mu1, mu2, mu3, keepTopKLabels, 
-                       useBipartiteOptimization, verbose, resultList)
-      }
-      case "mad" => {
+        new OriginalAdsorption(keepTopKLabels, mu1, mu2, mu3)
+
+      case "mad" =>
         MessagePrinter.Print("Using " + algo + " ...\n")
-        Adsorption.Run(graph, maxIters, "modified", mu1, mu2, mu3, keepTopKLabels, 
-                       useBipartiteOptimization, verbose, resultList)
-      }
-      case "lp_zgl" => {
+        new ModifiedAdsorption(keepTopKLabels, mu1, mu2, mu3)
+    
+      case "lp_zgl" =>
         MessagePrinter.Print("Using Label Propagation (ZGL) ...\n")
-        LP_ZGL.Run(graph, maxIters, mu2, keepTopKLabels, 
-                   useBipartiteOptimization, verbose, resultList)
-      }
-      case _ => MessagePrinter.PrintAndDie("Unknown algorithm: " + algo)
-    }
-  }
+        new LpZgl(mu2, keepTopKLabels)
 
+      case _ => throw new RuntimeException("Unknown algorithm: " + algo)
+    }
+
+    propagator.run(graph, maxIters, useBipartiteOptimization, verbose, resultList)
+
+    if (resultList.size > 0) {
+      val res = resultList.get(resultList.size - 1)
+      MessagePrinter.Print(Constants.GetPrecisionString + " " + res(Constants.GetPrecisionString))
+      MessagePrinter.Print(Constants.GetMRRString + " " + res(Constants.GetMRRString))
+    }
+
+  }
 
 }
 
@@ -68,7 +78,7 @@ object JuntoRunner {
 object JuntoConfigRunner {
 
   def apply (config: Hashtable[String,String], 
-             resultList: ArrayList[TObjectDoubleHashMap[String]]) = {
+             resultList: ArrayList[Map[String, Double]]) = {
 
     // pretty print the configs
     println(CollectionUtil.Map2StringPrettyPrint(config))
@@ -108,7 +118,7 @@ object JuntoConfigRunner {
   }
 
   def main (args: Array[String]) = 
-    apply(ConfigReader.read_config(args), new ArrayList[TObjectDoubleHashMap[String]])
+    apply(ConfigReader.read_config(args), new ArrayList[Map[String,Double]])
 
 }
 

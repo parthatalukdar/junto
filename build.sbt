@@ -2,7 +2,7 @@ import AssemblyKeys._
 
 name := "Junto"
 
-version := "1.2.1"
+version := "1.2.2"
 
 organization := "None"
 

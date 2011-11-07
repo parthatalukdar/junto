@@ -1,3 +1,11 @@
+v 1.2.2
+-------
+
+ - Ported algorithms to Scala, and changed from static/object methods
+   to classes with simple class hierarchy for LP algorithms. Removed
+   QC algorithm in prep for more changes to API. (Baldridge)
+
+
 v 1.2.1
 -------
  - Fixed mistaken references to "Fogbow" in build.
