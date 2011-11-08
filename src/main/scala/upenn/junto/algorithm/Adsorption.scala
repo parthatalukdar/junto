@@ -67,8 +67,8 @@ extends LabelPropagationAlgorithm {
     // -- normalize edge weights
     // -- remove dummy label from injected or estimate labels.
     // -- if seed node, then initialize estimated labels with injected
-    for (vName <- g._vertices.keySet.iterator) {
-      val v: Vertex = g._vertices.get(vName)
+    for (vName <- g.vertices.keySet.iterator) {
+      val v: Vertex = g.vertices.get(vName)
 			
       // add a self loop. This will be useful in contributing
       // currently estimated label scores to next round's computation.
@@ -108,15 +108,15 @@ extends LabelPropagationAlgorithm {
 
       val newDist =  new HashMap[String, TObjectDoubleHashMap[String]]
 
-      for (vName <- g._vertices.keySet.iterator) {
+      for (vName <- g.vertices.keySet) {
 			
-        val v: Vertex = g._vertices.get(vName)
+        val v: Vertex = g.vertices.get(vName)
 
         val vertexNewDist = new TObjectDoubleHashMap[String]
 							
         // compute weighted neighborhood label distribution
         for (neighName <- v.GetNeighborNames) {
-          val neigh: Vertex = g._vertices.get(neighName)
+          val neigh: Vertex = g.vertices.get(neighName)
           val mult = getMultiplier(vName, v, neighName, neigh)
 
           if (verbose)
@@ -173,15 +173,15 @@ extends LabelPropagationAlgorithm {
 
         // Store the new distribution for later update
         newDist.put(vName, vertexNewDist)
-      }			
+      }	
 
       var deltaLabelDiff = 0.0
       var totalColumnUpdates = 0
       var totalEntityUpdates = 0
 		
       // update all vertices with new estimated label scores
-      for (vName <- g._vertices.keySet.iterator) {
-        val v: Vertex = g._vertices.get(vName)
+      for (vName <- g.vertices.keySet.iterator) {
+        val v: Vertex = g.vertices.get(vName)
         val vertexNewDist = newDist.get(vName)
 				
         if (!useBipartiteOptimization) {
@@ -215,7 +215,7 @@ extends LabelPropagationAlgorithm {
       // clear map
       newDist.clear
 			
-      val totalNodes = g._vertices.size
+      val totalNodes = g.vertices.size
       val deltaLabelDiffPerNode = (1.0 * deltaLabelDiff) / totalNodes
 
       val res = Map(Constants.GetMRRString -> GraphEval.GetAverageTestMRR(g),
@@ -241,26 +241,28 @@ extends LabelPropagationAlgorithm {
   }
 	
   def getObjective (g: Graph, v: Vertex): Double = {
-    var obj = 0.0
-		
+
     // difference with injected labels
-    if (v.isSeedNode)
-      obj += (mu1 * v.pinject *
-              ProbUtil.GetDifferenceNorm2Squarred(v.injectedLabels, 1,
-                                                  v.estimatedLabels, 1))
-		
+    val seedObj = 
+      if (v.isSeedNode)
+        (mu1 * v.pinject *
+         ProbUtil.GetDifferenceNorm2Squarred(v.injectedLabels, 1, v.estimatedLabels, 1))
+      else
+        0.0
+	
     // difference with labels of neighbors
-    for (neighbor <- v.GetNeighborNames)
-      obj += (mu2 * v.GetNeighborWeight(neighbor) *
-              ProbUtil.GetDifferenceNorm2Squarred(v.estimatedLabels, 1,
-                                            g._vertices.get(neighbor).estimatedLabels, 1))
-	    
+    val neighObj = v.GetNeighborNames.map(
+      neighbor => (mu2 * v.GetNeighborWeight(neighbor) *
+                   ProbUtil.GetDifferenceNorm2Squarred(v.estimatedLabels, 1,
+                                                       g.vertices.get(neighbor).estimatedLabels, 1))
+    ).sum
+
     // difference with dummy labels
-    obj += mu3 * ProbUtil.GetDifferenceNorm2Squarred(
+    val dummyObj = mu3 * ProbUtil.GetDifferenceNorm2Squarred(
       Constants.GetDummyLabelDist, v.pabandon, v.estimatedLabels, 1
     )
     
-    obj
+    seedObj + neighObj + dummyObj
   }
 
 }

@@ -34,8 +34,8 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
     // -- normalize edge weights
     // -- remove dummy label from injected or estimate labels.
     // -- if seed node, then initialize estimated labels with injected
-    for (vName <- g._vertices.keySet.iterator) {
-      val v: Vertex = g._vertices.get(vName)
+    for (vName <- g.vertices.keySet.iterator) {
+      val v: Vertex = g.vertices.get(vName)
 			
       // remove dummy label: after normalization, some of the distributions
       // may not be valid probability distributions, but that is fine as the
@@ -71,8 +71,8 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
 
       val newDist = new HashMap[String, TObjectDoubleHashMap[String]]()
 
-      for (vName <- g._vertices.keySet.iterator) {
-        val v: Vertex = g._vertices.get(vName)
+      for (vName <- g.vertices.keySet.iterator) {
+        val v: Vertex = g.vertices.get(vName)
 				
         // if the current node is a seed node, then there is no need
         // to estimate new labels.
@@ -86,7 +86,7 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
 					
           // compute weighted neighborhood label distribution
           for (neighName <- v.GetNeighborNames) {
-            val neigh: Vertex = g._vertices.get(neighName)
+            val neigh: Vertex = g.vertices.get(neighName)
             val mult = neigh.GetNeighborWeight(vName)
             if (mult <= 0)
               MessagePrinter.PrintAndDie("Zero weight edge: " +
@@ -107,8 +107,8 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
       var deltaLabelDiff = 0.0
 			
       // update all vertices with new estimated label scores
-      for (vName <- g._vertices.keySet.iterator) {
-        val v: Vertex = g._vertices.get(vName)
+      for (vName <- g.vertices.keySet.iterator) {
+        val v: Vertex = g.vertices.get(vName)
 
         // normalize and retain only top scoring labels
         ProbUtil.Normalize(newDist.get(vName), keepTopKLabels)
@@ -148,7 +148,7 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
       // clear map
       newDist.clear
 			
-      val totalNodes = g._vertices.size
+      val totalNodes = g.vertices.size
       val deltaLabelDiffPerNode = (1.0 * deltaLabelDiff) / totalNodes
 
       if (verbose) {
@@ -184,7 +184,7 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
       obj += (v.GetNeighborWeight(neighbor) *
               ProbUtil.GetDifferenceNorm2Squarred(
                 v.estimatedLabels, 1,
-                g._vertices.get(neighbor).estimatedLabels, 1))
+                g.vertices.get(neighbor).estimatedLabels, 1))
 	    
     obj
   }

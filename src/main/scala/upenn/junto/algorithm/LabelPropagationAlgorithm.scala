@@ -14,8 +14,8 @@ abstract class LabelPropagationAlgorithm {
   def getObjective (graph: Graph, vertex: Vertex): Double
 
   def getObjective (graph: Graph): Double =
-    graph._vertices.keySet.iterator.foldLeft(0.0)(
-      (obj, vName) => obj + getObjective(graph, graph._vertices.get(vName))
+    graph.vertices.keySet.iterator.foldLeft(0.0)(
+      (obj, vName) => obj + getObjective(graph, graph.vertices.get(vName))
     )
 
 

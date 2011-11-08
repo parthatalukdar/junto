@@ -12,10 +12,10 @@ public class GraphEval {
     int correct_doc_cnt = 0;
     int total_doc_cnt = 0;
 
-    Iterator<String> vIter = g._vertices.keySet().iterator();			
+    Iterator<String> vIter = g.vertices().keySet().iterator();			
     while (vIter.hasNext()) {
       String vName = vIter.next();
-      Vertex v = g._vertices.get(vName);
+      Vertex v = g.vertices().get(vName);
 			
       if (v.isTestNode()) {
         double mrr = v.GetMRR();
@@ -34,10 +34,10 @@ public class GraphEval {
     double doc_mrr_sum = 0;
     int total_doc_cnt = 0;
 
-    Iterator<String> vIter = g._vertices.keySet().iterator();			
+    Iterator<String> vIter = g.vertices().keySet().iterator();			
     while (vIter.hasNext()) {
       String vName = vIter.next();
-      Vertex v = g._vertices.get(vName);
+      Vertex v = g.vertices().get(vName);
 			
       if (v.isTestNode()) {
         double mrr = v.GetMRR();
@@ -54,10 +54,10 @@ public class GraphEval {
     double doc_mrr_sum = 0;
     int total_doc_cnt = 0;
 
-    Iterator<String> vIter = g._vertices.keySet().iterator();			
+    Iterator<String> vIter = g.vertices().keySet().iterator();			
     while (vIter.hasNext()) {
       String vName = vIter.next();
-      Vertex v = g._vertices.get(vName);
+      Vertex v = g.vertices().get(vName);
 			
       if (v.isSeedNode()) {
         double mrr = v.GetMRR();
@@ -74,10 +74,10 @@ public class GraphEval {
     double totalMSE = 0;
     int totalCount = 0;
 
-    Iterator<String> vIter = g._vertices.keySet().iterator();			
+    Iterator<String> vIter = g.vertices().keySet().iterator();			
     while (vIter.hasNext()) {
       String vName = vIter.next();
-      Vertex v = g._vertices.get(vName);
+      Vertex v = g.vertices().get(vName);
 			
       if (v.isTestNode()) {
         totalMSE += v.GetMSE();

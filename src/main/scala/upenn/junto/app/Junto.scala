@@ -61,7 +61,7 @@ object JuntoRunner {
     }
 
     propagator.run(graph, maxIters, useBipartiteOptimization, verbose, resultList)
-
+    
     if (resultList.size > 0) {
       val res = resultList.get(resultList.size - 1)
       MessagePrinter.Print(Constants.GetPrecisionString + " " + res(Constants.GetPrecisionString))
@@ -111,9 +111,9 @@ object JuntoConfigRunner {
                 useBipartiteOptimization, verbose, resultList)
 		
     if (config.containsKey("output_file") && (config.get("output_file")).length > 0)
-      graph.SaveEstimatedScores(config.get("output_file"))
+      GraphIo.saveEstimatedScores(graph, config.get("output_file"))
     else if (config.containsKey("output_base") && (config.get("output_base")).length > 0)
-      graph.SaveEstimatedScores(config.get("output_base") + ".mu2_" + mu2 + ".mu3_" + mu3)
+      GraphIo.saveEstimatedScores(graph, config.get("output_base") + ".mu2_" + mu2 + ".mu3_" + mu3)
 
   }
 

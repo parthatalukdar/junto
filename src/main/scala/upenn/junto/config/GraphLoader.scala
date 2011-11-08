@@ -66,12 +66,11 @@ object GraphConfigLoader {
 
     // print out graph statistics
     MessagePrinter.Print(GraphStats.PrintStats(graph))
-		
+
+    // FIXME: Disabled for now. JMB 2011-11-08
     // save graph in file, if requested
-    if (config.containsKey("graph_output_file")) {
-      // graph.WriteToFile(config.get("graph_output_file"))
-      graph.WriteToFileWithAlphabet(config.get("graph_output_file"))
-    }
+    //if (config.containsKey("graph_output_file"))
+    //  GraphIo.WriteToFile(graph, config.get("graph_output_file"))
 
     graph
   }
@@ -103,9 +102,9 @@ object GraphBuilder {
     var cnt = 0
     for (edge <- edges) {
       cnt += 1
-      if (cnt % 1000000 == 0) {
-    	  println("Edges Processed: " + cnt);
-      }
+      if (cnt % 1000000 == 0)
+    	println("Edges Processed: " + cnt);
+
 
       // source -> target
       val dv = graph.AddVertex(edge.source, Constants.GetDummyLabel)
@@ -120,7 +119,7 @@ object GraphBuilder {
 
     // Inject seed labels
     if (seeds.length > 0) {
-      graph.SetSeedInjected
+      graph.isSeedInjected = true
 
       val currSeedsPerClassCount = new TObjectIntHashMap[String]
       for (seed <- seeds) {
@@ -128,7 +127,7 @@ object GraphBuilder {
         if (!currSeedsPerClassCount.containsKey(seed.label))
           currSeedsPerClassCount.put(seed.label, 0)
 
-        val vertex = graph._vertices.get(seed.vertex)
+        val vertex = graph.vertices.get(seed.vertex)
         if (vertex != null) {
           // update gold label of the current node
           vertex.setGoldLabel(seed.label, seed.score)
@@ -153,7 +152,7 @@ object GraphBuilder {
     // Mark all test nodes, which will be used during evaluation.
     if (testLabels.length > 0) {
       for (node <- testLabels) {
-        val vertex = graph._vertices.get(node.vertex)
+        val vertex = graph.vertices.get(node.vertex)
         assert(vertex != null)
         vertex.setGoldLabel(node.label, node.score)
         vertex.isTestNode = true
@@ -166,10 +165,10 @@ object GraphBuilder {
       graph.SetGaussianWeights(sigmaFactor)
 
     graph.KeepTopKNeighbors(maxNeighbors)
-		
+
     if (pruneThreshold != null) 
       graph.PruneLowDegreeNodes(pruneThreshold.toInt)
-		
+
     graph
   }
   

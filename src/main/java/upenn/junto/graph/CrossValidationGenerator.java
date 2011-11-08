@@ -20,9 +20,9 @@ public class CrossValidationGenerator {
     // Random r = new Random(); 
 		
     TObjectDoubleHashMap instanceVertices = new TObjectDoubleHashMap();
-    Iterator vIter = g._vertices.keySet().iterator();
+    Iterator vIter = g.vertices().keySet().iterator();
     while (vIter.hasNext()) {
-      Vertex v = g._vertices.get(vIter.next());
+      Vertex v = g.vertices().get(vIter.next());
 			
       // nodes without feature prefix and those with at least one
       // gold labels are considered valid instances

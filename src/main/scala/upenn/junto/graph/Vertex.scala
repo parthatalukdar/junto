@@ -26,7 +26,9 @@ object Vertex {
     vertex
   }
 
-  def getPrettyPrintMap (m: TObjectDoubleHashMap[String], la: RyanAlphabet) = {		
+  def getPrettyPrintMap (m: TObjectDoubleHashMap[String]): String = getPrettyPrintMap(m, null)
+
+  def getPrettyPrintMap (m: TObjectDoubleHashMap[String], la: RyanAlphabet): String = {		
     val sortedMap: ArrayList[ObjectDoublePair] = CollectionUtil.ReverseSortMap(m)
     var op = ""
     sortedMap.foreach { 
@@ -98,11 +100,10 @@ class Vertex (val name: String) {
 
   def setGoldLabel (goldLabel: String, weight: Double) {
     if (goldLabel != Constants.GetDummyLabel && goldLabel.length > 0) {
-      if (weight == 0.0) {
+      if (weight == 0.0)
         goldLabels.remove(goldLabel)
-      } else {
+      else
         goldLabels.put(goldLabel, weight)
-      }
     }
   }
 	
@@ -219,7 +220,7 @@ class Vertex (val name: String) {
       nIter.advance
       totalNeighWeight += pcontinue * nIter.value
 			
-      val neigh = g._vertices.get(nIter.key)
+      val neigh = g.vertices.get(nIter.key)
       totalNeighWeight += neigh.pcontinue * neigh.GetNeighborWeight(name)
     }
 		
@@ -240,7 +241,7 @@ class Vertex (val name: String) {
     0.0
   }
   
-  val GetMSE: Double = {		
+  def GetMSE: Double = {		
     // a new copy of the estimated labels, minus the dummy label
     val estimatedLabelsCopy = new TObjectDoubleHashMap[String]
 
@@ -298,7 +299,7 @@ class Vertex (val name: String) {
      CollectionUtil.Map2String(goldLabels) + delim +
      CollectionUtil.Map2String(injectedLabels) + delim +
      CollectionUtil.Map2String(estimatedLabels) + delim +
-     CollectionUtil.Map2String(neighbors) + delim +
+     "Neighbors: " + CollectionUtil.Map2String(neighbors) + delim +
      rwProbStr)
   }
 

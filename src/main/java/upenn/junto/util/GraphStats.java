@@ -44,8 +44,8 @@ public class GraphStats {
     int maxDegree = Integer.MIN_VALUE;
     int minDegree = Integer.MAX_VALUE;
 
-    for (String vName : g._vertices.keySet()) {
-      Vertex v = g._vertices.get(vName);
+    for (String vName : g.vertices().keySet()) {
+      Vertex v = g.vertices().get(vName);
       ++totalVertices;
 			
       int degree = v.GetNeighborNames().length;
@@ -59,8 +59,6 @@ public class GraphStats {
       if (v.isSeedNode() && v.isTestNode()) { ++totalSeedAndTestNodes; }
     }
 		
-    //		DefaultDirectedWeightedGraph<Vertex,DefaultWeightedEdge> g2 = g.GetJGraphTGraph();
-
     String retStr = "Total seed vertices: " + totalSeedNodes + "\n";
     retStr += "Total test vertices: " + totalTestNodes + "\n";
     retStr += "Total seed vertices which are also test vertices: " + totalSeedAndTestNodes + "\n";
@@ -69,20 +67,9 @@ public class GraphStats {
     retStr += "Average degree: " + (1.0 * totalEdges) / totalVertices + "\n";
     retStr += "Min degree: " + minDegree + "\n";
     retStr += "Max degree: " + maxDegree + "\n";
-    // retStr += GetDiameter(g2);
-    //		retStr += "Strongly connected: " +
-    //				(IsStronglyConnected(g) ? "true" : "false") + "\n";
 
     return (retStr);
   }
-	
-  //	private static boolean IsStronglyConnected(Graph g) {
-  //		DefaultDirectedWeightedGraph<Vertex,DefaultWeightedEdge> g2 =
-  //			g.GetJGraphTGraph();		
-  //		StrongConnectivityInspector<Vertex,DefaultWeightedEdge> sci =
-  //			new StrongConnectivityInspector<Vertex,DefaultWeightedEdge>(g2);
-  //		return (sci.isStronglyConnected());
-  //	}
 	
   private static String GetDiameter(
                                     DefaultDirectedWeightedGraph<Vertex,DefaultWeightedEdge> g) {

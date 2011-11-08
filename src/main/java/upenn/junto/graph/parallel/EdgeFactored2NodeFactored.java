@@ -43,10 +43,10 @@ public class EdgeFactored2NodeFactored {
   public static void WriteToFile(Graph g, String outputFile) {
     try {
       BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile));
-      Iterator<String> vIter = g._vertices.keySet().iterator();			
+      Iterator<String> vIter = g.vertices().keySet().iterator();			
       while (vIter.hasNext()) {
         String vName = vIter.next();
-        Vertex v = g._vertices.get(vName);
+        Vertex v = g.vertices().get(vName);
 				
         // remove dummy label from injected and estimated labels
         v.setGoldLabel(Constants.GetDummyLabel(), 0.0);
@@ -80,7 +80,7 @@ public class EdgeFactored2NodeFactored {
             neighStr = "";
           }
 
-          Vertex n = g._vertices.get(neighNames[ni]);
+          Vertex n = g.vertices().get(neighNames[ni]);
           neighStr += neighNames[ni] + " " +
             v.GetNeighborWeight((String) neighNames[ni]) + " ";
         }
