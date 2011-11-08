@@ -12,9 +12,13 @@ crossPaths := false
 
 retrieveManaged := true
 
-libraryDependencies += "org.clapper" %% "argot" % "0.3.5"
+resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
-libraryDependencies += "net.sf.trove4j" % "trove4j" % "3.0.1"
+libraryDependencies ++= Seq(
+  "se.scalablesolutions.akka" % "akka-actor" % "1.2",
+  "org.clapper" %% "argot" % "0.3.5",
+  "net.sf.trove4j" % "trove4j" % "3.0.1"
+)
 
 seq(assemblySettings: _*)
 

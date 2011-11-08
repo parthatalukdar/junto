@@ -24,9 +24,10 @@ import scala.collection.JavaConversions._
  * http://pages.cs.wisc.edu/~jerryzhu/pub/CMU-CALD-02-107.pdf
  *
  */
-class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm {
+class LpZgl (g: Graph, mu2: Double, keepTopKLabels: Int) 
+extends LabelPropagationAlgorithm(g) {
 
-  def run (g: Graph, maxIter: Int, useBipartiteOptimization: Boolean, 
+  def run (maxIter: Int, useBipartiteOptimization: Boolean, 
            verbose: Boolean, resultList: ArrayList[Map[String,Double]]) {
 		
     var totalSeedNodes = 0
@@ -57,7 +58,7 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
 		
     if (verbose)
       println("after_iteration " + 0 + 
-              " objective: " + getObjective(g) +
+              " objective: " + getGraphObjective +
               " accuracy: " + GraphEval.GetAccuracy(g) +
               " rmse: " + GraphEval.GetRMSE(g) +
               " mrr_train: " + GraphEval.GetAverageTrainMRR(g) +
@@ -158,7 +159,7 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
         resultList.add(res)
 
         println("\nafter_iteration " + iter +
-                " objective: " + getObjective(g) +
+                " objective: " + getGraphObjective +
                 " accuracy: " + res(Constants.GetPrecisionString) +
                 " rmse: " + GraphEval.GetRMSE(g) +
                 " time: " + (endTime - startTime) +
@@ -171,7 +172,7 @@ class LpZgl (mu2: Double, keepTopKLabels: Int) extends LabelPropagationAlgorithm
 		
   }
 
-  def getObjective (g: Graph, v: Vertex): Double = {
+  def getObjective (v: Vertex): Double = {
 
     var obj = 0.0
 		

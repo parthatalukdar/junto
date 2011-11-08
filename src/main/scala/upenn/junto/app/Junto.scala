@@ -47,20 +47,20 @@ object JuntoRunner {
 
       case "adsorption" =>
         MessagePrinter.Print("Using " + algo + " ...\n")
-        new OriginalAdsorption(keepTopKLabels, mu1, mu2, mu3)
+        new OriginalAdsorption(graph, keepTopKLabels, mu1, mu2, mu3)
 
       case "mad" =>
         MessagePrinter.Print("Using " + algo + " ...\n")
-        new ModifiedAdsorption(keepTopKLabels, mu1, mu2, mu3)
+        new ModifiedAdsorption(graph, keepTopKLabels, mu1, mu2, mu3)
     
       case "lp_zgl" =>
         MessagePrinter.Print("Using Label Propagation (ZGL) ...\n")
-        new LpZgl(mu2, keepTopKLabels)
+        new LpZgl(graph, mu2, keepTopKLabels)
 
       case _ => throw new RuntimeException("Unknown algorithm: " + algo)
     }
 
-    propagator.run(graph, maxIters, useBipartiteOptimization, verbose, resultList)
+    propagator.run(maxIters, useBipartiteOptimization, verbose, resultList)
     
     if (resultList.size > 0) {
       val res = resultList.get(resultList.size - 1)

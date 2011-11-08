@@ -17,11 +17,41 @@ import gnu.trove.iterator.TObjectDoubleIterator
 
 import scala.collection.JavaConversions._
 
-class ModifiedAdsorption (keepTopKLabels: Int, mu1: Double, mu2: Double, mu3: Double)
-extends Adsorption (keepTopKLabels, mu1, mu2, mu3) {
 
-  def normalizeScores (vertex: Vertex, graph: Graph, scores: TObjectDoubleHashMap[String]) {
-    ProbUtil.DivScores(scores, vertex.GetNormalizationConstant(graph, mu1, mu2, mu3))
+/**
+ * Class for MAD algorithm, providing MAD specific implementation details
+ * as extension of Adsorption.
+ */
+class ModifiedAdsorption (g: Graph, keepTopKLabels: Int, mu1: Double, mu2: Double, mu3: Double)
+extends Adsorption (g, keepTopKLabels, mu1, mu2, mu3) {
+
+  // Precomputes M_ii normalization (see algorithm in Talukdar and Crammer 2009)
+  //val normalizationConstants: Map[String, Double] = {
+  val normalizationConstants: TObjectDoubleHashMap[String] = {
+    val norms = new TObjectDoubleHashMap[String]
+    g.vertices.keySet.foreach { 
+      vName => {
+        val vertex = g.vertices.get(vName)
+        
+        var totalNeighWeight = 0.0
+        val nIter = vertex.neighbors.iterator
+        while (nIter.hasNext) {
+          nIter.advance
+          totalNeighWeight += vertex.pcontinue * nIter.value
+          val neigh = g.vertices.get(nIter.key)
+          totalNeighWeight += neigh.pcontinue * neigh.GetNeighborWeight(vertex.name)
+        }
+		
+        //mii = mu1 x p^{inj} + 0.5 * mu2 x \sum_j (p_{i}^{cont} W_{ij} + p_{j}^{cont} W_{ji}) + mu3
+        val mii = mu1 * vertex.pinject + mu2 * totalNeighWeight + mu3
+        norms.put(vName, mii)
+      }
+    }
+    norms
+  }
+
+  def normalizeScores (vertex: Vertex, scores: TObjectDoubleHashMap[String]) {
+    ProbUtil.DivScores(scores, normalizationConstants.get(vertex.name))
   }
 
   // multiplier for MAD update: (p_v_cont * w_vu + p_u_cont * w_uv) where u is neighbor
@@ -31,10 +61,14 @@ extends Adsorption (keepTopKLabels, mu1, mu2, mu3) {
 
 }
 
-class OriginalAdsorption (keepTopKLabels: Int, mu1: Double, mu2: Double, mu3: Double)
-extends Adsorption (keepTopKLabels, mu1, mu2, mu3) {
+/**
+ * Class for the original Baluja et al algorithm, providing specific implementation
+ * details as extension of Adsorption.
+ */
+class OriginalAdsorption (g: Graph, keepTopKLabels: Int, mu1: Double, mu2: Double, mu3: Double)
+extends Adsorption (g, keepTopKLabels, mu1, mu2, mu3) {
 
-  def normalizeScores (vertex: Vertex, graph: Graph, scores: TObjectDoubleHashMap[String]) {
+  def normalizeScores (vertex: Vertex, scores: TObjectDoubleHashMap[String]) {
     ProbUtil.Normalize(scores, keepTopKLabels)
   }
 
@@ -46,28 +80,31 @@ extends Adsorption (keepTopKLabels, mu1, mu2, mu3) {
     ProbUtil.Normalize(scores) 
   }
 
-
 }
 
-abstract class Adsorption (keepTopKLabels: Int, mu1: Double, mu2: Double, mu3: Double)
-extends LabelPropagationAlgorithm {
+
+/**
+ * Parent class for Adsorption algorithms.
+ */
+abstract class Adsorption (g: Graph, keepTopKLabels: Int, mu1: Double, mu2: Double, mu3: Double)
+extends LabelPropagationAlgorithm(g) {
 
   // Normalization is needed only for the original Adsorption
   // algorithm.  After normalization, we have the weighted
   // neighborhood label distribution for the current node.
   def normalizeIfNecessary (scores: TObjectDoubleHashMap[String]) { }
 
-  def normalizeScores (vertex: Vertex, graph: Graph, scores: TObjectDoubleHashMap[String]): Unit
+  def normalizeScores (vertex: Vertex, scores: TObjectDoubleHashMap[String]): Unit
 
   def getMultiplier (vName: String, vertex: Vertex, neighName: String, neighbor: Vertex): Double
 
-  def run (g: Graph, maxIter: Int, useBipartiteOptimization: Boolean,
+  def run (maxIter: Int, useBipartiteOptimization: Boolean,
            verbose: Boolean, resultList: ArrayList[Map[String,Double]]) {
 		
     // -- normalize edge weights
     // -- remove dummy label from injected or estimate labels.
     // -- if seed node, then initialize estimated labels with injected
-    for (vName <- g.vertices.keySet.iterator) {
+    for (vName <- g.vertices.keySet) {
       val v: Vertex = g.vertices.get(vName)
 			
       // add a self loop. This will be useful in contributing
@@ -82,7 +119,7 @@ extends LabelPropagationAlgorithm {
         val injLabIter = v.injectedLabels.iterator
         while (injLabIter.hasNext) {
           injLabIter.advance
-          v.SetInjectedLabelScore(injLabIter.key.asInstanceOf[String], injLabIter.value)
+          v.SetInjectedLabelScore(injLabIter.key, injLabIter.value)
         }
         v.SetEstimatedLabelScores(new TObjectDoubleHashMap[String](v.injectedLabels))
       } else {
@@ -93,7 +130,7 @@ extends LabelPropagationAlgorithm {
 		
     if (verbose) { 
       println("after_iteration " + 0 + 
-              " objective: " + getObjective(g) +
+              " objective: " + getGraphObjective +
               " precision: " + GraphEval.GetAccuracy(g) +
               " rmse: " + GraphEval.GetRMSE(g) +
               " mrr_train: " + GraphEval.GetAverageTrainMRR(g) +
@@ -169,7 +206,7 @@ extends LabelPropagationAlgorithm {
         }
 				
         // normalize in case of Adsorption
-        normalizeScores(v, g, vertexNewDist)
+        normalizeScores(v, vertexNewDist)
 
         // Store the new distribution for later update
         newDist.put(vName, vertexNewDist)
@@ -180,7 +217,7 @@ extends LabelPropagationAlgorithm {
       var totalEntityUpdates = 0
 		
       // update all vertices with new estimated label scores
-      for (vName <- g.vertices.keySet.iterator) {
+      for (vName <- g.vertices.keySet) {
         val v: Vertex = g.vertices.get(vName)
         val vertexNewDist = newDist.get(vName)
 				
@@ -225,7 +262,7 @@ extends LabelPropagationAlgorithm {
 
       if (verbose)
         println("after_iteration " + iter +
-                " objective: " + getObjective(g) +
+                " objective: " + getGraphObjective +
                 " accuracy: " + res(Constants.GetPrecisionString) +
                 " rmse: " + GraphEval.GetRMSE(g) +
                 " time: " + (endTime - startTime) +
@@ -240,10 +277,10 @@ extends LabelPropagationAlgorithm {
 		
   }
 	
-  def getObjective (g: Graph, v: Vertex): Double = {
+  def getObjective (v: Vertex): Double = {
 
     // difference with injected labels
-    val seedObj = 
+    val seedObjective = 
       if (v.isSeedNode)
         (mu1 * v.pinject *
          ProbUtil.GetDifferenceNorm2Squarred(v.injectedLabels, 1, v.estimatedLabels, 1))
@@ -251,18 +288,18 @@ extends LabelPropagationAlgorithm {
         0.0
 	
     // difference with labels of neighbors
-    val neighObj = v.GetNeighborNames.map(
+    val neighObjective = v.GetNeighborNames.map(
       neighbor => (mu2 * v.GetNeighborWeight(neighbor) *
                    ProbUtil.GetDifferenceNorm2Squarred(v.estimatedLabels, 1,
                                                        g.vertices.get(neighbor).estimatedLabels, 1))
     ).sum
 
     // difference with dummy labels
-    val dummyObj = mu3 * ProbUtil.GetDifferenceNorm2Squarred(
+    val dummyObjective = mu3 * ProbUtil.GetDifferenceNorm2Squarred(
       Constants.GetDummyLabelDist, v.pabandon, v.estimatedLabels, 1
     )
     
-    seedObj + neighObj + dummyObj
+    seedObjective + neighObjective + dummyObjective
   }
 
 }

@@ -5,17 +5,16 @@ import gnu.trove.map.hash.TObjectDoubleHashMap
 import upenn.junto.graph.{Graph, Vertex}
 import scala.collection.JavaConversions._
 
-abstract class LabelPropagationAlgorithm {
+abstract class LabelPropagationAlgorithm (graph: Graph) {
 
-  def run (graph: Graph, maxIter: Int,
-           useBipartiteOptimization: Boolean,
+  def run (maxIter: Int, useBipartiteOptimization: Boolean,
            verbose: Boolean, resultList: ArrayList[Map[String,Double]])
 
-  def getObjective (graph: Graph, vertex: Vertex): Double
+  def getObjective (vertex: Vertex): Double
 
-  def getObjective (graph: Graph): Double =
+  def getGraphObjective: Double =
     graph.vertices.keySet.iterator.foldLeft(0.0)(
-      (obj, vName) => obj + getObjective(graph, graph.vertices.get(vName))
+      (obj, vName) => obj + getObjective(graph.vertices.get(vName))
     )
 
 

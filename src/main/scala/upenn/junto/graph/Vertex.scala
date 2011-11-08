@@ -212,21 +212,6 @@ class Vertex (val name: String) {
     sum
   }
 	
-  // Returns M_ii normalization (see algorithm in Talukdar and Crammer 2009)
-  def GetNormalizationConstant (g: Graph, mu1: Double, mu2: Double, mu3: Double) = {
-    var totalNeighWeight = 0.0
-    val nIter = neighbors.iterator
-    while (nIter.hasNext) {
-      nIter.advance
-      totalNeighWeight += pcontinue * nIter.value
-			
-      val neigh = g.vertices.get(nIter.key)
-      totalNeighWeight += neigh.pcontinue * neigh.GetNeighborWeight(name)
-    }
-		
-    //mii = mu1 x p^{inj} + 0.5 * mu2 x \sum_j (p_{i}^{cont} W_{ij} + p_{j}^{cont} W_{ji}) + mu3
-    mu1 * pinject + mu2 * totalNeighWeight + mu3
-  }
 	
   def GetMRR: Double = {
     val sortedMap: ArrayList[ObjectDoublePair] = CollectionUtil.ReverseSortMap(estimatedLabels)

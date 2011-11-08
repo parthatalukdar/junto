@@ -1,6 +1,9 @@
 v 1.2.2
 -------
 
+ - Ported Graph and Vertex classes to Scala. Reduced hash table
+   lookups. Precompute Mii normalization values. (Baldridge)
+
  - Ported algorithms to Scala, and changed from static/object methods
    to classes with simple class hierarchy for LP algorithms. Removed
    QC algorithm in prep for more changes to API. (Baldridge)
