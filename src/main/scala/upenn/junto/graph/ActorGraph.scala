@@ -64,8 +64,8 @@ object MadGraphRunner {
       graph.vertices.values.toIndexedSeq.map {
         v: Vertex => {
           v.SetInjectedLabelScore(Constants.GetDummyLabel, 0.0)
-          val vertexActorRef = actorOf(new MadVertex(v.name, v.pinject, v.pcontinue, v.pabandon,
-                                                     mu1, mu2, mu3, 
+          val vertexActorRef = actorOf(new MadVertex(self, v.name, v.pinject, v.pcontinue, v.pabandon,
+                                                     mu1, mu2, mu3, v.neighbors.size,
                                                      normalizationConstants.get(v.name),
                                                      v.injectedLabels, v.estimatedLabels,
                                                      v.isTestNode, v.goldLabels))
@@ -87,7 +87,6 @@ object MadGraphRunner {
     }
     
     val vertices = namesToActorVertices.values.toIndexedSeq
-    
     val numTestNodes = graph.vertices.values.count(_.isTestNode).toDouble
 
     var numBusyVertices: Int = _
@@ -98,33 +97,17 @@ object MadGraphRunner {
 
       // Broadcast to all the vertices that they should push their
       // labels to their neighbors
-      case NextStep => {
+      case NextStep =>
         numBusyVertices = vertices.length
         vertices.foreach(vertex => vertex ! PushLabels)
-      }
-
-      // Receive a message from a vertex that has completed pushing
-      // labels. Once none are left, tell the vertices to update their
-      // estimated labels.
-      case DonePushing => {
-        numBusyVertices -= 1
-        if (numBusyVertices == 0) {
-          numBusyVertices = vertices.length
-          vertices.foreach(vertex => vertex ! UpdateEstimatedLabels)
-        }
-      }
 
       // Receive a message from a vertex about the results of its
       // updating its previous iteration estimated label distribution
       // to the new one.
       case DoneUpdating(delta, mrr) => {
-
         numBusyVertices -= 1
-
         totalDeltaLabelDiff += delta
-
-        val addToCorrect = if (mrr==1.0) 1.0 else 0.0
-        correctNodeCount += addToCorrect
+        correctNodeCount += (if (mrr==1.0) 1.0 else 0.0)
 
         if (numBusyVertices == 0) {
           println("Delta: " + totalDeltaLabelDiff)
@@ -151,8 +134,9 @@ object MadGraphRunner {
    * information it receives from fellow vertices.
    */
   class MadVertex (
+    controller: ActorRef,
     name: String, pinject: Double, pcontinue: Double, pabandon: Double,
-    mu1: Double, mu2: Double, mu3: Double,
+    mu1: Double, mu2: Double, mu3: Double, numNeighbors: Int,
     miiNormalization: Double,
     injectedLabels: TObjectDoubleHashMap[String],
     var estimatedLabels: TObjectDoubleHashMap[String],
@@ -166,6 +150,8 @@ object MadGraphRunner {
     var neighbors: TObjectDoubleHashMap[ActorRef] = _
     var newLabelDist = new TObjectDoubleHashMap[String]
 
+    var numNeighborMessagesReceived = 0
+
     def receive = {
 
       // Set the neighbors of this node, as a map from ActorRefs for
@@ -178,54 +164,59 @@ object MadGraphRunner {
       case PushLabels =>
         for (neighRef <- neighbors.keySet)
           neighRef ! NeighborInfo(self, pcontinue, neighbors.get(neighRef), estimatedLabels)
-        self reply DonePushing
 
       // Receive a message from a neighbor and perform the relevant computation.
-      case NeighborInfo(neighbor: ActorRef, nPcontinue, 
-                        nWeightOfRecipient, nLabelDist) =>
+      case NeighborInfo(neighbor: ActorRef, nPcontinue, nWeightOfRecipient, nLabelDist) => {
         val mult = pcontinue * neighbors.get(neighbor) + nPcontinue * nWeightOfRecipient
         ProbUtil.AddScores(newLabelDist, mult*mu2, nLabelDist)
-        
-      // Once all labels have been pushed, the controller sends this
-      // message to a vertex so that finalizes the update, which
-      // involves vertex-internal computations with the injected
-      // labels and the prior distribution (the dummy distribution).
-      case UpdateEstimatedLabels => {
+	numNeighborMessagesReceived += 1
 
-        // Add in the injected label contribution
-        ProbUtil.AddScores(newLabelDist, pinject*mu1, injectedLabels)
-
-        // Add in the dummy label contribution
-        ProbUtil.AddScores(newLabelDist, pabandon*mu3, Constants.GetDummyLabelDist)
-
-        // Normalize by Mii
-        ProbUtil.DivScores(newLabelDist, miiNormalization)
-
-        // Calculate the delta from the previous estimated label distribution
-        val deltaLabelDiff = 
-          ProbUtil.GetDifferenceNorm2Squarred(estimatedLabels, 1.0, newLabelDist, 1.0)
-
-        // Swap in the new distribution and clear newLabelDist for the next round
-        estimatedLabels = new TObjectDoubleHashMap[String](newLabelDist)
-        newLabelDist.clear
-
-        val mrr =
-          if (isTestNode) {
-            val sortedMap: List[ObjectDoublePair] = 
-              CollectionUtil.ReverseSortMap(estimatedLabels).toList.filter(_.GetLabel != Constants.GetDummyLabel)
-            val goldRank = sortedMap.indexWhere(pair => goldLabels.containsKey(pair.GetLabel))
-            if (goldRank > -1) 1.0/(goldRank + 1.0)
-            else 0.0
-          } else {
-            0.0
-          }
-        
-        // Report back
-        self reply DoneUpdating(deltaLabelDiff, mrr)
+	// When all neighbors have reported their distributions, wrap
+	// up the update and report back to the controller.
+	if (numNeighborMessagesReceived == numNeighbors) {
+	  val (deltaLabelDiff, mrr) = updateEstimatedLabels
+          numNeighborMessagesReceived = 0
+	  controller ! DoneUpdating(deltaLabelDiff, mrr)	  
+	}
       }
-
-
+        
     }
+
+    // Once all labels have been pushed, finalizes the update, which
+    // involves vertex-internal computations with the injected
+    // labels and the prior distribution (the dummy distribution).
+    def updateEstimatedLabels = {
+
+      // Add in the injected label contribution
+      ProbUtil.AddScores(newLabelDist, pinject*mu1, injectedLabels)
+
+      // Add in the dummy label contribution
+      ProbUtil.AddScores(newLabelDist, pabandon*mu3, Constants.GetDummyLabelDist)
+
+      // Normalize by M_ii
+      ProbUtil.DivScores(newLabelDist, miiNormalization)
+
+      // Calculate the delta from the previous estimated label distribution
+      val deltaLabelDiff = 
+        ProbUtil.GetDifferenceNorm2Squarred(estimatedLabels, 1.0, newLabelDist, 1.0)
+
+      // Swap in the new distribution and clear newLabelDist for the next round
+      estimatedLabels = new TObjectDoubleHashMap[String](newLabelDist)
+      newLabelDist.clear
+
+      val mrr =
+        if (isTestNode) {
+          val sortedMap: List[ObjectDoublePair] = 
+            CollectionUtil.ReverseSortMap(estimatedLabels).toList.filter(_.GetLabel != Constants.GetDummyLabel)
+          val goldRank = sortedMap.indexWhere(pair => goldLabels.containsKey(pair.GetLabel))
+          if (goldRank > -1) 1.0/(goldRank + 1.0)
+          else 0.0
+        } else {
+          0.0
+        }
+      (deltaLabelDiff,mrr)
+    }
+
 
   }
 
