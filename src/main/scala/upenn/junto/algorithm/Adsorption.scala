@@ -17,7 +17,6 @@ import gnu.trove.iterator.TObjectDoubleIterator
 
 import scala.collection.JavaConversions._
 
-
 /**
  * Class for MAD algorithm, providing MAD specific implementation details
  * as extension of Adsorption.
@@ -25,9 +24,27 @@ import scala.collection.JavaConversions._
 class ModifiedAdsorption (g: Graph, keepTopKLabels: Int, mu1: Double, mu2: Double, mu3: Double)
 extends Adsorption (g, keepTopKLabels, mu1, mu2, mu3) {
 
+  val normalizationConstants = MadHelper.computeNormalizationConstants(g, mu1, mu2, mu3)
+
+  def normalizeScores (vertex: Vertex, scores: TObjectDoubleHashMap[String]) {
+    ProbUtil.DivScores(scores, normalizationConstants.get(vertex.name))
+  }
+
+  // multiplier for MAD update: (p_v_cont * w_vu + p_u_cont * w_uv) where u is neighbor
+  def getMultiplier (vName: String, vertex: Vertex, neighName: String, neighbor: Vertex) =
+    (vertex.pcontinue * vertex.GetNeighborWeight(neighName) +
+     neighbor.pcontinue * neighbor.GetNeighborWeight(vName))
+
+}
+
+// Helper methods for the MAD algorithm
+object MadHelper {
+
   // Precomputes M_ii normalization (see algorithm in Talukdar and Crammer 2009)
-  //val normalizationConstants: Map[String, Double] = {
-  val normalizationConstants: TObjectDoubleHashMap[String] = {
+  def computeNormalizationConstants (
+    g: Graph, mu1: Double, mu2: Double, mu3: Double
+  ): TObjectDoubleHashMap[String] = {
+
     val norms = new TObjectDoubleHashMap[String]
     g.vertices.keySet.foreach { 
       vName => {
@@ -50,16 +67,9 @@ extends Adsorption (g, keepTopKLabels, mu1, mu2, mu3) {
     norms
   }
 
-  def normalizeScores (vertex: Vertex, scores: TObjectDoubleHashMap[String]) {
-    ProbUtil.DivScores(scores, normalizationConstants.get(vertex.name))
-  }
-
-  // multiplier for MAD update: (p_v_cont * w_vu + p_u_cont * w_uv) where u is neighbor
-  def getMultiplier (vName: String, vertex: Vertex, neighName: String, neighbor: Vertex) =
-    (vertex.pcontinue * vertex.GetNeighborWeight(neighName) +
-     neighbor.pcontinue * neighbor.GetNeighborWeight(vName))
-
 }
+
+
 
 /**
  * Class for the original Baluja et al algorithm, providing specific implementation
@@ -78,6 +88,37 @@ extends Adsorption (g, keepTopKLabels, mu1, mu2, mu3) {
 
   override def normalizeIfNecessary (scores: TObjectDoubleHashMap[String]) { 
     ProbUtil.Normalize(scores) 
+  }
+
+}
+
+object AdsorptionHelper {
+
+  // -- normalize edge weights
+  // -- remove dummy label from injected or estimate labels.
+  // -- if seed node, then initialize estimated labels with injected
+  def prepareGraph (graph: Graph) {
+    for (vName <- graph.vertices.keySet) {
+      val v: Vertex = graph.vertices.get(vName)
+      
+      // remove dummy label: after normalization, some of the distributions
+      // may not be valid probability distributions, but that is fine as the
+      // algorithm doesn't require the scores to be normalized (to start with)
+      v.SetInjectedLabelScore(Constants.GetDummyLabel, 0.0)
+      
+      if (v.isSeedNode) {
+        val injLabIter = v.injectedLabels.iterator
+        while (injLabIter.hasNext) {
+          injLabIter.advance
+          v.SetInjectedLabelScore(injLabIter.key, injLabIter.value)
+        }
+        v.SetEstimatedLabelScores(new TObjectDoubleHashMap[String](v.injectedLabels))
+      } else {
+        // remove dummy label
+        v.SetEstimatedLabelScore(Constants.GetDummyLabel, 0.0);				
+      }
+    }
+    
   }
 
 }
@@ -101,41 +142,15 @@ extends LabelPropagationAlgorithm(g) {
   def run (maxIter: Int, useBipartiteOptimization: Boolean,
            verbose: Boolean, resultList: ArrayList[Map[String,Double]]) {
 		
-    // -- normalize edge weights
-    // -- remove dummy label from injected or estimate labels.
-    // -- if seed node, then initialize estimated labels with injected
-    for (vName <- g.vertices.keySet) {
-      val v: Vertex = g.vertices.get(vName)
-			
-      // add a self loop. This will be useful in contributing
-      // currently estimated label scores to next round's computation.
-
-      // remove dummy label: after normalization, some of the distributions
-      // may not be valid probability distributions, but that is fine as the
-      // algorithm doesn't require the scores to be normalized (to start with)
-      v.SetInjectedLabelScore(Constants.GetDummyLabel, 0.0)
-
-      if (v.isSeedNode) {
-        val injLabIter = v.injectedLabels.iterator
-        while (injLabIter.hasNext) {
-          injLabIter.advance
-          v.SetInjectedLabelScore(injLabIter.key, injLabIter.value)
-        }
-        v.SetEstimatedLabelScores(new TObjectDoubleHashMap[String](v.injectedLabels))
-      } else {
-        // remove dummy label
-        v.SetEstimatedLabelScore(Constants.GetDummyLabel, 0.0);				
-      }
-    }
+    AdsorptionHelper.prepareGraph(g)
 		
-    if (verbose) { 
+    if (verbose)
       println("after_iteration " + 0 + 
               " objective: " + getGraphObjective +
               " precision: " + GraphEval.GetAccuracy(g) +
               " rmse: " + GraphEval.GetRMSE(g) +
               " mrr_train: " + GraphEval.GetAverageTrainMRR(g) +
               " mrr_test: " + GraphEval.GetAverageTestMRR(g))
-    }
 
     print("Iteration:")
     for (iter <- 1 to maxIter) {

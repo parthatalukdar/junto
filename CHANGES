@@ -1,6 +1,8 @@
 v 1.2.2
 -------
 
+ - Added preliminary actor-based implementation of MAD. (Baldridge)
+
  - Ported Graph and Vertex classes to Scala. Reduced hash table
    lookups. Precompute Mii normalization values. (Baldridge)
 

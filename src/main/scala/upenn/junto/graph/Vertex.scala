@@ -214,17 +214,13 @@ class Vertex (val name: String) {
 	
 	
   def GetMRR: Double = {
-    val sortedMap: ArrayList[ObjectDoublePair] = CollectionUtil.ReverseSortMap(estimatedLabels)
-    var goldRank = 0
-    for (pair <- sortedMap) {
-      if (pair.GetLabel != Constants.GetDummyLabel) {
-        goldRank += 1
-        if (goldLabels.containsKey(pair.GetLabel))
-          return 1.0 / goldRank
-      }
-    }
-    0.0
+    val sortedMap: List[ObjectDoublePair] = 
+      CollectionUtil.ReverseSortMap(estimatedLabels).toList.filter(_.GetLabel != Constants.GetDummyLabel)
+    val goldRank = sortedMap.indexWhere(pair => goldLabels.containsKey(pair.GetLabel))
+    if (goldRank > -1) 1.0/(goldRank + 1.0)
+    else 0.0
   }
+
   
   def GetMSE: Double = {		
     // a new copy of the estimated labels, minus the dummy label

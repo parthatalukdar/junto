@@ -43,29 +43,39 @@ object JuntoRunner {
              keepTopKLabels: Int, useBipartiteOptimization: Boolean,
              verbose: Boolean, resultList: ArrayList[Map[String,Double]]) {
 
-    val propagator = algo match {
+    // Change this to true to try the (still preliminary) actor implementation.
+    val useActors = false
+    if (useActors) {
+      MessagePrinter.Print("Using actor-based MAD...\n")
+      MadGraphRunner(graph, mu1, mu2, mu3, maxIters)
 
-      case "adsorption" =>
-        MessagePrinter.Print("Using " + algo + " ...\n")
+    } else {
+
+      val propagator = algo match {
+        
+        case "adsorption" =>
+          MessagePrinter.Print("Using " + algo + " ...\n")
         new OriginalAdsorption(graph, keepTopKLabels, mu1, mu2, mu3)
-
-      case "mad" =>
-        MessagePrinter.Print("Using " + algo + " ...\n")
+        
+        case "mad" =>
+          MessagePrinter.Print("Using " + algo + " ...\n")
         new ModifiedAdsorption(graph, keepTopKLabels, mu1, mu2, mu3)
-    
-      case "lp_zgl" =>
-        MessagePrinter.Print("Using Label Propagation (ZGL) ...\n")
+        
+        case "lp_zgl" =>
+          MessagePrinter.Print("Using Label Propagation (ZGL) ...\n")
         new LpZgl(graph, mu2, keepTopKLabels)
+        
+        case _ => throw new RuntimeException("Unknown algorithm: " + algo)
+      }
+      
+      propagator.run(maxIters, useBipartiteOptimization, verbose, resultList)
+      
+      if (resultList.size > 0) {
+        val res = resultList.get(resultList.size - 1)
+        MessagePrinter.Print(Constants.GetPrecisionString + " " + res(Constants.GetPrecisionString))
+        MessagePrinter.Print(Constants.GetMRRString + " " + res(Constants.GetMRRString))
+      }
 
-      case _ => throw new RuntimeException("Unknown algorithm: " + algo)
-    }
-
-    propagator.run(maxIters, useBipartiteOptimization, verbose, resultList)
-    
-    if (resultList.size > 0) {
-      val res = resultList.get(resultList.size - 1)
-      MessagePrinter.Print(Constants.GetPrecisionString + " " + res(Constants.GetPrecisionString))
-      MessagePrinter.Print(Constants.GetMRRString + " " + res(Constants.GetMRRString))
     }
 
   }
