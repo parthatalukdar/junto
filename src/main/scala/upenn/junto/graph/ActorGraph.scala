@@ -24,8 +24,6 @@ object MadGraphRunner {
   case object Stop extends MadMessage
   case class SetNeighbors(neighbors: TObjectDoubleHashMap[ActorRef]) extends MadMessage
   case object PushLabels extends MadMessage
-  case object DonePushing extends MadMessage
-  case object UpdateEstimatedLabels extends MadMessage
   case class DoneUpdating(delta: Double, mrr: Double) extends MadMessage
   case class Advance(worker: ActorRef) extends MadMessage
 
