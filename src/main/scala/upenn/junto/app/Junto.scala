@@ -44,7 +44,7 @@ object JuntoRunner {
              verbose: Boolean, resultList: ArrayList[Map[String,Double]]) {
 
     // Change this to true to try the (still preliminary) actor implementation.
-    val useActors = true
+    val useActors = false
     if (useActors) {
       MessagePrinter.Print("Using actor-based MAD...\n")
       MadGraphRunner(graph, mu1, mu2, mu3, maxIters)
