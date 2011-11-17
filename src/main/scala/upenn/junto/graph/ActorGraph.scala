@@ -23,7 +23,6 @@ object MadGraphRunner {
   sealed trait MadMessage
   case object NextStep extends MadMessage
   case object Stop extends MadMessage
-  //case class SetNeighbors(neighbors: TObjectDoubleHashMap[ActorRef]) extends MadMessage
   case class SetNeighbors(neighbors: Map[ActorRef, Double]) extends MadMessage
   case object PushLabels extends MadMessage
   case class DoneUpdating(delta: Double, mrr: Double) extends MadMessage
@@ -33,7 +32,6 @@ object MadGraphRunner {
     neighbor: ActorRef, 
     nPcontinue: Double, 
     nWeightOfRecipent: Double,
-    //labelDist: TObjectDoubleHashMap[String]
     labelDist: Map[String, Double]
   )
 
@@ -42,10 +40,9 @@ object MadGraphRunner {
    * vertices and start the work.
    */
   def apply (graph: Graph, mu1: Double, mu2: Double, mu3: Double, maxIters: Int) {
-    val clock = actorOf(new Clock(maxIters)).start()
-    val madGraph = actorOf(new MadGraph(clock, graph, mu1, mu2, mu3)).start()
-    madGraph !! NextStep
-    println("Done!")
+    val clock = actorOf(new Clock(maxIters)).start
+    val madGraph = actorOf(new MadGraph(clock, graph, mu1, mu2, mu3)).start
+    madGraph ! NextStep
   }
 
   /**
@@ -73,7 +70,7 @@ object MadGraphRunner {
                           TroveToScalaMap(v.estimatedLabels),
                           v.isTestNode, 
                           TroveToScalaMap(v.goldLabels)))
-          vertexActorRef.start()
+          vertexActorRef.start
           (v.name, vertexActorRef)
         }
       }.toMap
@@ -115,8 +112,8 @@ object MadGraphRunner {
         if (numBusyVertices == 0) {
           println("Delta: " + totalDeltaLabelDiff)
           println("Acc: " + correctNodeCount/numTestNodes)
-          totalDeltaLabelDiff = 0
-          correctNodeCount = 0
+          totalDeltaLabelDiff = 0.0
+          correctNodeCount = 0.0
           clock ! Advance(self)
         }
       }
@@ -171,7 +168,6 @@ object MadGraphRunner {
       // Receive a message from a neighbor and perform the relevant computation.
       case NeighborInfo(neighbor: ActorRef, nPcontinue, nWeightOfRecipient, nLabelDist) => {
         val mult = pcontinue * neighbors(neighbor) + nPcontinue * nWeightOfRecipient
-        //DistUtil.addScores(newLabelDist, mult*mu2, nLabelDist)
         DistUtil.addScores(newLabelDist, mult*mu2, nLabelDist)
 
 	numNeighborMessagesReceived += 1
@@ -208,7 +204,6 @@ object MadGraphRunner {
         DistUtil.getDifferenceNorm2Squared(estimatedLabels, 1.0, newLabelDist, 1.0)
 
       // Swap in the new distribution and clear newLabelDist for the next round
-      //estimatedLabels = new TObjectDoubleHashMap[String](newLabelDist)
       estimatedLabels = newLabelDist.toMap
       newLabelDist.clear
 
