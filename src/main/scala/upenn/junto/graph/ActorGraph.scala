@@ -9,6 +9,7 @@ import gnu.trove.map.hash.TObjectDoubleHashMap
 import upenn.junto.algorithm._
 import upenn.junto.util.Constants
 
+
 /**
  * An implementation of MAD using Akka actors. Still preliminary -- has some things
  * to add in yet, and round out, but the core algorithm is working properly. There
@@ -22,7 +23,8 @@ object MadGraphRunner {
   sealed trait MadMessage
   case object NextStep extends MadMessage
   case object Stop extends MadMessage
-  case class SetNeighbors(neighbors: TObjectDoubleHashMap[ActorRef]) extends MadMessage
+  //case class SetNeighbors(neighbors: TObjectDoubleHashMap[ActorRef]) extends MadMessage
+  case class SetNeighbors(neighbors: Map[ActorRef, Double]) extends MadMessage
   case object PushLabels extends MadMessage
   case class DoneUpdating(delta: Double, mrr: Double) extends MadMessage
   case class Advance(worker: ActorRef) extends MadMessage
@@ -31,7 +33,8 @@ object MadGraphRunner {
     neighbor: ActorRef, 
     nPcontinue: Double, 
     nWeightOfRecipent: Double,
-    labelDist: TObjectDoubleHashMap[String]
+    //labelDist: TObjectDoubleHashMap[String]
+    labelDist: Map[String, Double]
   )
 
   /**
@@ -62,11 +65,14 @@ object MadGraphRunner {
       graph.vertices.values.toIndexedSeq.map {
         v: Vertex => {
           v.SetInjectedLabelScore(Constants.GetDummyLabel, 0.0)
-          val vertexActorRef = actorOf(new MadVertex(self, v.name, v.pinject, v.pcontinue, v.pabandon,
-                                                     mu1, mu2, mu3, v.neighbors.size,
-                                                     normalizationConstants.get(v.name),
-                                                     v.injectedLabels, v.estimatedLabels,
-                                                     v.isTestNode, v.goldLabels))
+          val vertexActorRef = actorOf(
+            new MadVertex(self, v.name, v.pinject, v.pcontinue, v.pabandon,
+                          mu1, mu2, mu3, v.neighbors.size,
+                          normalizationConstants.get(v.name),
+                          TroveToScalaMap(v.injectedLabels), 
+                          TroveToScalaMap(v.estimatedLabels),
+                          v.isTestNode, 
+                          TroveToScalaMap(v.goldLabels)))
           vertexActorRef.start()
           (v.name, vertexActorRef)
         }
@@ -75,10 +81,9 @@ object MadGraphRunner {
     namesToActorVertices.foreach {
       case(vName, vertexActorRef) => {
         val neighborsAsStrings = graph.vertices.get(vName).neighbors
-        val neighborsAsActorRefs = new TObjectDoubleHashMap[ActorRef]
-        for (neighName <- neighborsAsStrings.keySet)
-          neighborsAsActorRefs.put(namesToActorVertices(neighName), 
-                                   neighborsAsStrings.get(neighName))
+        val neighborsAsActorRefs = neighborsAsStrings.keySet.map {
+          neighName => (namesToActorVertices(neighName) -> neighborsAsStrings.get(neighName))
+        } toMap
 
         vertexActorRef ! SetNeighbors(neighborsAsActorRefs)
       }
@@ -136,17 +141,17 @@ object MadGraphRunner {
     name: String, pinject: Double, pcontinue: Double, pabandon: Double,
     mu1: Double, mu2: Double, mu3: Double, numNeighbors: Int,
     miiNormalization: Double,
-    injectedLabels: TObjectDoubleHashMap[String],
-    var estimatedLabels: TObjectDoubleHashMap[String],
+    injectedLabels: Map[String, Double],
+    var estimatedLabels: Map[String, Double],
     isTestNode: Boolean,
-    goldLabels: TObjectDoubleHashMap[String]
+    goldLabels: Map[String, Double]
   ) extends Actor {
 
     import upenn.junto.util._
     import java.util.ArrayList
 
-    var neighbors: TObjectDoubleHashMap[ActorRef] = _
-    var newLabelDist = new TObjectDoubleHashMap[String]
+    var neighbors: Map[ActorRef, Double] = _
+    val newLabelDist = new collection.mutable.HashMap[String, Double]
 
     var numNeighborMessagesReceived = 0
 
@@ -161,12 +166,14 @@ object MadGraphRunner {
       // that one's neighbors can compute their updates.
       case PushLabels =>
         for (neighRef <- neighbors.keySet)
-          neighRef ! NeighborInfo(self, pcontinue, neighbors.get(neighRef), estimatedLabels)
+          neighRef ! NeighborInfo(self, pcontinue, neighbors(neighRef), estimatedLabels)
 
       // Receive a message from a neighbor and perform the relevant computation.
       case NeighborInfo(neighbor: ActorRef, nPcontinue, nWeightOfRecipient, nLabelDist) => {
-        val mult = pcontinue * neighbors.get(neighbor) + nPcontinue * nWeightOfRecipient
-        ProbUtil.AddScores(newLabelDist, mult*mu2, nLabelDist)
+        val mult = pcontinue * neighbors(neighbor) + nPcontinue * nWeightOfRecipient
+        //DistUtil.addScores(newLabelDist, mult*mu2, nLabelDist)
+        DistUtil.addScores(newLabelDist, mult*mu2, nLabelDist)
+
 	numNeighborMessagesReceived += 1
 
 	// When all neighbors have reported their distributions, wrap
@@ -186,29 +193,34 @@ object MadGraphRunner {
     def updateEstimatedLabels = {
 
       // Add in the injected label contribution
-      ProbUtil.AddScores(newLabelDist, pinject*mu1, injectedLabels)
+      DistUtil.addScores(newLabelDist, pinject*mu1, injectedLabels)
 
       // Add in the dummy label contribution
-      ProbUtil.AddScores(newLabelDist, pabandon*mu3, Constants.GetDummyLabelDist)
+      DistUtil.addScores(newLabelDist, pabandon*mu3, DistUtil.DummyLabelDist)
 
       // Normalize by M_ii
-      ProbUtil.DivScores(newLabelDist, miiNormalization)
+      newLabelDist.foreach { 
+        case(k,v) => newLabelDist += (k -> v/miiNormalization)
+      }
 
       // Calculate the delta from the previous estimated label distribution
       val deltaLabelDiff = 
-        ProbUtil.GetDifferenceNorm2Squarred(estimatedLabels, 1.0, newLabelDist, 1.0)
+        DistUtil.getDifferenceNorm2Squared(estimatedLabels, 1.0, newLabelDist, 1.0)
 
       // Swap in the new distribution and clear newLabelDist for the next round
-      estimatedLabels = new TObjectDoubleHashMap[String](newLabelDist)
+      //estimatedLabels = new TObjectDoubleHashMap[String](newLabelDist)
+      estimatedLabels = newLabelDist.toMap
       newLabelDist.clear
+
 
       val mrr =
         if (isTestNode) {
-          val sortedMap: List[ObjectDoublePair] = 
-            CollectionUtil.ReverseSortMap(estimatedLabels).toList.filter(_.GetLabel != Constants.GetDummyLabel)
-          val goldRank = sortedMap.indexWhere(pair => goldLabels.containsKey(pair.GetLabel))
-          if (goldRank > -1) 1.0/(goldRank + 1.0)
-          else 0.0
+          val sortedMap: List[(String,Double)] = 
+            estimatedLabels.toList.sortBy(_._2).reverse.filter(_._1 != Constants.GetDummyLabel)
+
+          val goldRank = sortedMap.indexWhere(pair => goldLabels.containsKey(pair._1))
+
+          if (goldRank > -1) 1.0/(goldRank + 1.0) else 0.0
         } else {
           0.0
         }
@@ -242,4 +254,41 @@ object MadGraphRunner {
 
 }
 
+/**
+ * Converts a Trove map to a Scala map.
+ */
+object TroveToScalaMap {
+  def apply[T] (tmap: TObjectDoubleHashMap[T]): Map[T,Double] =
+    tmap.keySet.map(key => (key -> tmap.get(key))).toMap
+}
 
+/**
+ * Utilities for working with probability distributions stored
+ * as Map[String, Double] objects.
+ */
+object DistUtil {
+
+  val DummyLabelDist = Map(Constants.GetDummyLabel -> 1.0)
+
+  def addScores (accumulator: collection.mutable.Map[String, Double],
+                 multiplier: Double,
+                 addDist: Map[String,Double]) {
+    addDist.mapValues(_*multiplier).foreach {
+      case(k,v) => 
+        val updatedValue = v + accumulator.getOrElse(k, 0.0)
+        accumulator += (k -> updatedValue)
+    } 
+  }
+
+
+  def getDifferenceNorm2Squared(
+    m1: Map[String, Double],
+    m1Mult: Double, 
+    m2: collection.mutable.Map[String, Double], 
+    m2Mult: Double
+  ) = {
+    val differences = (m1.keys ++ m2.keys).map(k => m1.getOrElse(k, 0.0) - m2.getOrElse(k, 0.0))
+    math.sqrt(differences.map(x => x*x).sum)
+  }
+
+}
