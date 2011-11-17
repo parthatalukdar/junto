@@ -1,5 +1,6 @@
 v 1.2.2
 -------
+ - Updated to SBT 0.11.1. (Baldridge)
 
  - Added preliminary actor-based implementation of MAD. (Baldridge)
 
