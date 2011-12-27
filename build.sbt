@@ -17,7 +17,7 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 libraryDependencies ++= Seq(
   "se.scalablesolutions.akka" % "akka-actor" % "1.2",
   "org.clapper" %% "argot" % "0.3.5",
-  "net.sf.trove4j" % "trove4j" % "3.0.1",
+  "net.sf.trove4j" % "trove4j" % "3.0.2",
   "commons-logging" % "commons-logging" % "1.1.1"
 )
 
