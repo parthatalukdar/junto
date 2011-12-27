@@ -123,7 +123,7 @@ $ junto build
 This will drop you into the SBT interface.  The build targets that are
 supported are listeded here:
 
-http://code.google.com/p/simple-build-tool/wiki/RunningSbt
+https://github.com/harrah/xsbt/wiki/Getting-Started-Running
 
 Note: if you have SBT already installed on your system, you can also
 just call it directly with "sbt".
@@ -159,9 +159,9 @@ look into examples/hadoop/README
 Bug Reports
 ===========
 
-Please report bugs on the Google code site: 
+Please report bugs on the GitHub site: 
 
-  http://code.google.com/p/junto/
+  https://github.com/utcompling/junto
 
 
 Getting help
