@@ -85,13 +85,13 @@ object GraphBuilder {
   import gnu.trove.map.hash.TObjectIntHashMap
 
   // Create a graph using lots of defaults; no test labels provided
-  def apply (edges: List[Edge], seeds: List[Label]): Graph = apply(edges, seeds, List[Label]())
+  def apply (edges: TraversableOnce[Edge], seeds: TraversableOnce[Label]): Graph = apply(edges, seeds, List[Label]())
 
   // Create a graph using lots of defaults
-  def apply (edges: List[Edge], seeds: List[Label], testLabels: List[Label]): Graph = 
+  def apply (edges: TraversableOnce[Edge], seeds: TraversableOnce[Label], testLabels: TraversableOnce[Label]): Graph = 
     apply(edges, seeds, testLabels, 2.0, Integer.MAX_VALUE, Integer.MAX_VALUE, false, 0.0, null, false)
 
-  def apply (edges: List[Edge], seeds: List[Label], testLabels: List[Label], 
+  def apply (edges: TraversableOnce[Edge], seeds: TraversableOnce[Label], testLabels: TraversableOnce[Label], 
              beta: Double, maxNeighbors: Int, maxSeedsPerClass: Int, 
              setGaussianWeights: Boolean, sigmaFactor: Double,
              pruneThreshold: String, isDirected: Boolean) = {
@@ -118,7 +118,7 @@ object GraphBuilder {
     }
 
     // Inject seed labels
-    if (seeds.length > 0) {
+    if (seeds.nonEmpty) {
       graph.isSeedInjected = true
 
       val currSeedsPerClassCount = new TObjectIntHashMap[String]
@@ -150,7 +150,7 @@ object GraphBuilder {
     }
 
     // Mark all test nodes, which will be used during evaluation.
-    if (testLabels.length > 0) {
+    if (testLabels.nonEmpty) {
       for (node <- testLabels) {
         val vertex = graph.vertices.get(node.vertex)
         assert(vertex != null)
