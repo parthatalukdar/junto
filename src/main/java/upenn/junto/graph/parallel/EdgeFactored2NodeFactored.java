@@ -99,7 +99,7 @@ public class EdgeFactored2NodeFactored {
       }
       bw.close();
     } catch (IOException ioe) {
-      ioe.printStackTrace();
+      throw new RuntimeException(ioe);
     }
   }
 }

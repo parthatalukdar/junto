@@ -16,7 +16,11 @@ import upenn.junto.util.RyanAlphabet;
 import gnu.trove.map.hash.TObjectDoubleHashMap;
 import gnu.trove.iterator.TObjectDoubleIterator;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class IoUtil {
+    private static Log LOG = LogFactory.getLog(IoUtil.class);
 
   public static ArrayList<String> LoadFile(String fileName) {
     ArrayList<String> retList = new ArrayList<String>();
@@ -30,10 +34,10 @@ public class IoUtil {
         }
       }
     } catch (IOException ioe) {
-      ioe.printStackTrace();
+      throw new RuntimeException(ioe);
     }
 		
-    MessagePrinter.Print("Total " + retList.size() +
+    LOG.info("Total " + retList.size() +
                          " entries loaded from " + fileName);
     return (retList);
   }
@@ -51,10 +55,10 @@ public class IoUtil {
         }
       }
     } catch (IOException ioe) {
-      ioe.printStackTrace();
+        throw new RuntimeException(ioe);
     }
 		
-    MessagePrinter.Print("Total " + retList.size() +
+    LOG.info("Total " + retList.size() +
                          " entries loaded from " + fileName);
     return (retList);
   }
@@ -71,10 +75,10 @@ public class IoUtil {
         assert (retAlpha.lookupIndex(fields[0]) == Integer.parseInt(fields[1]));
       }
     } catch (IOException ioe) {
-      ioe.printStackTrace();
+        throw new RuntimeException(ioe);
     }
 
-    MessagePrinter.Print("Total " + retAlpha.size() +
+    LOG.info("Total " + retAlpha.size() +
                          " entries loaded from " + fileName);
     return (retAlpha);
   }

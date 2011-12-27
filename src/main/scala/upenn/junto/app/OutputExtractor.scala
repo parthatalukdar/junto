@@ -19,6 +19,8 @@ package upenn.junto.app
 import scala.io.Source
 import java.io._
 import org.clapper.argot._
+import org.apache.commons.logging.Log
+import org.apache.commons.logging.LogFactory
 
 
 /** 
@@ -26,6 +28,7 @@ import org.clapper.argot._
  * for labels that have higher probability than __DUMMY__.
  */
 object OutputExtractor {
+  val LOG = LogFactory.getLog(OutputExtractor.getClass)
 
   val NodeRE = """([^_]+)_(.+)""".r
 
@@ -50,7 +53,7 @@ object OutputExtractor {
    */
   def main(args: Array[String]) = {
     try { parser.parse(args) }
-    catch { case e: ArgotUsageException => println(e.message); sys.exit(0) }
+    catch { case e: ArgotUsageException => LOG.info(e.message); sys.exit(0) }
 
     val typesToExtract = typeToExtractOption.value toSet
     val doAllNodeTypes = typesToExtract isEmpty

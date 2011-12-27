@@ -17,16 +17,19 @@ package upenn.junto.config
  */
 
 import java.util.{ArrayList,Hashtable}
+import org.apache.commons.logging.Log
+import org.apache.commons.logging.LogFactory
 import gnu.trove.map.hash.TObjectDoubleHashMap
 import upenn.junto.algorithm._
 import upenn.junto.graph._
 import upenn.junto.util._
 
-object GraphConfigLoader { 
+object GraphConfigLoader {
+  val LOG = LogFactory.getLog(GraphConfigLoader.getClass)
 
   def apply (config: Hashtable[String, String]): Graph = {
 		
-    println("Going to build graph ...")
+    LOG.info("Going to build graph ...")
 
     // this is used mostly for the data received from Mark, i.e.
     // for information extraction machine learning work.
@@ -65,7 +68,7 @@ object GraphConfigLoader {
       graph.SetGoldLabels(config.get("gold_labels_file"))
 
     // print out graph statistics
-    MessagePrinter.Print(GraphStats.PrintStats(graph))
+    LOG.info(GraphStats.PrintStats(graph))
 
     // FIXME: Disabled for now. JMB 2011-11-08
     // save graph in file, if requested
@@ -79,6 +82,7 @@ object GraphConfigLoader {
 
 
 object GraphBuilder {
+  val LOG = LogFactory.getLog(GraphBuilder.getClass)
 
   import io.Source
   import scala.collection.JavaConversions._
@@ -103,7 +107,7 @@ object GraphBuilder {
     for (edge <- edges) {
       cnt += 1
       if (cnt % 1000000 == 0)
-    	println("Edges Processed: " + cnt);
+    	LOG.info("Edges Processed: " + cnt);
 
 
       // source -> target

@@ -15,6 +15,9 @@ import upenn.junto.config.*;
 import upenn.junto.graph.*;
 import upenn.junto.util.MessagePrinter;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.jgrapht.GraphPath;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
@@ -22,6 +25,8 @@ import org.jgrapht.alg.StrongConnectivityInspector;
 import org.jgrapht.alg.KShortestPaths;
 
 public class GraphStats {
+    private static Log LOG = LogFactory.getLog(GraphStats.class);
+    
   // Number of K-shortest paths generated. 
   private static int _kPrime = -1;
 
@@ -31,7 +36,7 @@ public class GraphStats {
       swr.write(PrintStats(g));
       swr.close();
     } catch (IOException ioe) {
-      ioe.printStackTrace();
+      throw new RuntimeException(ioe);
     }
   }
 	
@@ -92,7 +97,7 @@ public class GraphStats {
 			
       ++totalProcessed;
       if (totalProcessed % 1000 == 0) {
-        MessagePrinter.Print("Processed: " + totalProcessed + " curr_dia: " + diameter);
+        LOG.info("Processed: " + totalProcessed + " curr_dia: " + diameter);
       }
 			
       KShortestPaths<Vertex,DefaultWeightedEdge> ksp = new KShortestPaths(g, v, 1);

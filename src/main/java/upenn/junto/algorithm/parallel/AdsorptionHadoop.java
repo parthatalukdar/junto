@@ -163,7 +163,7 @@ public class AdsorptionHadoop {
 
        // terminate if message from self is not received.
        if (!isSelfMessageFound) {
-    	   MessagePrinter.PrintAndDie("Self message not received for node " + vertexId);
+    	   throw new RuntimeException("Self message not received for node " + vertexId);
        }
        
        // collect neighbors label distributions and create one single

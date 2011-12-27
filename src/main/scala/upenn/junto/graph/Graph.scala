@@ -9,6 +9,9 @@ import upenn.junto.util._
 
 import scala.collection.JavaConversions._
 
+import org.apache.commons.logging.Log
+import org.apache.commons.logging.LogFactory
+
 class Graph {
 
   val vertices = new HashMap[String, Vertex]
@@ -33,7 +36,7 @@ class Graph {
 	
   def GetVertex (name: String) = {
     if (!vertices.containsKey(name)) 
-      MessagePrinter.PrintAndDie("Node " + name + " doesn't exist!")
+      new RuntimeException("Node " + name + " doesn't exist!")
     vertices.get(name)
   }
 	
@@ -62,7 +65,7 @@ class Graph {
       }
     }
 		
-    println("Total nodes pruned: " + totalPruned)
+    Graph.LOG.info("Total nodes pruned: " + totalPruned)
   }
 	
   // keep only K highest scoring neighbors
@@ -103,7 +106,7 @@ class Graph {
       }
     }
 		
-    println("Total edges: " + totalEdges)
+    Graph.LOG.info("Total edges: " + totalEdges)
   }
 	
 
@@ -154,7 +157,7 @@ class Graph {
       val fields = line.split("\t")
       assert (fields.length == 3)
 				
-      println(line)
+      Graph.LOG.info(line)
       val v = vertices.get(fields(0))
       if (v != null)
         v.setGoldLabel(fields(1), fields(2).toDouble)
@@ -171,15 +174,20 @@ class Graph {
       if (isZeroEntropy)
         totalZeroEntropyNeighborhoodNodes += 1
     }
-    MessagePrinter.Print("ZERO ENTROPY NEIGHBORHOOD Heuristic adjustment used for " +
+    Graph.LOG.info("ZERO ENTROPY NEIGHBORHOOD Heuristic adjustment used for " +
                          totalZeroEntropyNeighborhoodNodes + " nodes!")
   }
 	
 }
 
+object Graph {
+  val LOG = LogFactory.getLog(classOf[Graph])
+}
 
 object GraphIo {
   import java.io.{BufferedWriter,FileWriter}
+  
+  val LOG = LogFactory.getLog(GraphIo.getClass)
 
   val kDelim_ = "\t" 
 
@@ -212,11 +220,11 @@ object GraphIo {
     // print summary result
     // assert (total_doc_cnt > 0)
     if (total_doc_cnt > 0) {
-      println("PRECISION " + correct_doc_cnt.toDouble / total_doc_cnt +
+      LOG.info("PRECISION " + correct_doc_cnt.toDouble / total_doc_cnt +
                          " (" + correct_doc_cnt + " correct out of " + total_doc_cnt + ")")
-      println("MRR " + doc_mrr_sum.toDouble / total_doc_cnt)
+      LOG.info("MRR " + doc_mrr_sum.toDouble / total_doc_cnt)
     } else {
-      println("Total test instances evaluated: " + total_doc_cnt)
+      LOG.info("Total test instances evaluated: " + total_doc_cnt)
     }
     
   }

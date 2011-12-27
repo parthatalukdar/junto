@@ -163,7 +163,7 @@ public class LP_ZGL_Hadoop {
 
        // terminate if message from self is not received.
        if (!isSelfMessageFound) {
-    	   MessagePrinter.PrintAndDie("Self message not received for node " + vertexId);
+    	   throw new RuntimeException("Self message not received for node " + vertexId);
        }
        
        // Add neighbor label scores to current node's label estimates only if the

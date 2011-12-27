@@ -5,7 +5,6 @@ import upenn.junto.eval.GraphEval
 import upenn.junto.graph._
 import upenn.junto.util.CollectionUtil
 import upenn.junto.util.Constants
-import upenn.junto.util.MessagePrinter
 import upenn.junto.util.ProbUtil
 
 import java.util.ArrayList
@@ -14,6 +13,9 @@ import java.util.Iterator
 
 import gnu.trove.map.hash.TObjectDoubleHashMap
 import gnu.trove.iterator.TObjectDoubleIterator
+
+import org.apache.commons.logging.Log
+import org.apache.commons.logging.LogFactory
 
 import scala.collection.JavaConversions._
 
@@ -145,16 +147,17 @@ extends LabelPropagationAlgorithm(g) {
     AdsorptionHelper.prepareGraph(g)
 		
     if (verbose)
-      println("after_iteration " + 0 + 
+      Adsorption.LOG.info(
+              "after_iteration " + 0 + 
               " objective: " + getGraphObjective +
               " precision: " + GraphEval.GetAccuracy(g) +
               " rmse: " + GraphEval.GetRMSE(g) +
               " mrr_train: " + GraphEval.GetAverageTrainMRR(g) +
               " mrr_test: " + GraphEval.GetAverageTestMRR(g))
 
-    print("Iteration:")
+    Adsorption.LOG.info("Iteration:")
     for (iter <- 1 to maxIter) {
-      print(" " + iter)
+      Adsorption.LOG.info(" " + iter)
 			
       val startTime = System.currentTimeMillis
 
@@ -172,30 +175,30 @@ extends LabelPropagationAlgorithm(g) {
           val mult = getMultiplier(vName, v, neighName, neigh)
 
           if (verbose)
-            println(v.name + " " + v.pcontinue + " " +
+            Adsorption.LOG.info(v.name + " " + v.pcontinue + " " +
                     v.GetNeighborWeight(neighName) + " " +
                     neigh.pcontinue + " " + neigh.GetNeighborWeight(vName))
 
           if (mult <= 0) 
-            MessagePrinter.PrintAndDie("Non-positive weighted edge:>>" +
+            throw new RuntimeException("Non-positive weighted edge:>>" +
                                        neigh.name + "-->" + v.name + "<<" + " " + mult)
 
           ProbUtil.AddScores(vertexNewDist, mult * mu2, neigh.estimatedLabels)
         }
 				
         if (verbose)
-          println("Before norm: " + v.name + " " + ProbUtil.GetSum(vertexNewDist))
+          Adsorption.LOG.info("Before norm: " + v.name + " " + ProbUtil.GetSum(vertexNewDist))
 
         normalizeIfNecessary(vertexNewDist)
 								
         if (verbose) 
-          println("After norm: " + v.name + " " + ProbUtil.GetSum(vertexNewDist))
+          Adsorption.LOG.info("After norm: " + v.name + " " + ProbUtil.GetSum(vertexNewDist))
 				
         // add injection probability
         ProbUtil.AddScores(vertexNewDist, v.pinject * mu1, v.injectedLabels)
 	
         if (verbose)
-          println(iter + " after_inj " + v.name + " " +
+          Adsorption.LOG.info(iter + " after_inj " + v.name + " " +
                   ProbUtil.GetSum(vertexNewDist) + 
                   " " + CollectionUtil.Map2String(vertexNewDist) +
                   " mu1: " + mu1)
@@ -206,7 +209,8 @@ extends LabelPropagationAlgorithm(g) {
                            Constants.GetDummyLabelDist)
 				
         if (verbose)
-          println(iter + " after_dummy " + v.name + " " +
+          Adsorption.LOG.info(
+                  iter + " after_dummy " + v.name + " " +
                   ProbUtil.GetSum(vertexNewDist) + " " +
                   CollectionUtil.Map2String(vertexNewDist) +
                   " injected: " + CollectionUtil.Map2String(v.injectedLabels))
@@ -216,7 +220,7 @@ extends LabelPropagationAlgorithm(g) {
         if (keepTopKLabels < Integer.MAX_VALUE) {
           ProbUtil.KeepTopScoringKeys(vertexNewDist, keepTopKLabels)
           if (vertexNewDist.size > keepTopKLabels)
-            MessagePrinter.PrintAndDie("size mismatch: " +
+            throw new RuntimeException("size mismatch: " + 
                                        vertexNewDist.size + " " + keepTopKLabels)
         }
 				
@@ -276,7 +280,8 @@ extends LabelPropagationAlgorithm(g) {
       resultList.add(res)
 
       if (verbose)
-        println("after_iteration " + iter +
+        Adsorption.LOG.info(
+                "after_iteration " + iter +
                 " objective: " + getGraphObjective +
                 " accuracy: " + res(Constants.GetPrecisionString) +
                 " rmse: " + GraphEval.GetRMSE(g) +
@@ -288,7 +293,7 @@ extends LabelPropagationAlgorithm(g) {
                 " entity_updates: " + totalEntityUpdates + "\n")
 			
     }
-    println()
+    Adsorption.LOG.info("")
 		
   }
 	
@@ -317,4 +322,8 @@ extends LabelPropagationAlgorithm(g) {
     seedObjective + neighObjective + dummyObjective
   }
 
+}
+
+object Adsorption {
+  val LOG = LogFactory.getLog(classOf[Adsorption])
 }

@@ -57,8 +57,7 @@ public class Edge2NodeFactoredHadoop {
 				}
 				bfr.close();
 			} catch (IOException e) {
-				e.printStackTrace();
-				System.exit(1);
+				throw new RuntimeException(e);
 			}
 			return (m);
 		}

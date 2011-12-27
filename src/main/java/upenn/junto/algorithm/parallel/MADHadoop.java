@@ -184,13 +184,13 @@ public class MADHadoop {
 	    neighborContProb.put(neighId, Double.parseDouble(fields[3]));
 	  }
 	} else {
-	  MessagePrinter.PrintAndDie("Invalid message: " + val);
+	    throw new RuntimeException("Invalid message: " + val);
 	}
       }
 
       // terminate if message from self is not received.
       if (!isSelfMessageFound) {
-	MessagePrinter.PrintAndDie("Self message not received for node " + vertexId);
+          throw new RuntimeException("Self message not received for node " + vertexId);
       }
        
       // collect neighbors' label distributions and create one single

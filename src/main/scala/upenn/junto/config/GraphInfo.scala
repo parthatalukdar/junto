@@ -39,7 +39,7 @@ object EdgeFileReader {
     (for (line <- io.Source fromFile(filename) getLines) yield {
       // source target edge_weight
       val fields = line.trim split("\t")
-      assert(fields.length == 3, { println("Invalid entry in graph file: " + line)})
+      assert(fields.length == 3, "Invalid entry in graph file: " + line)
       new Edge(fields(0), fields(1), fields(2).toDouble)
     }).toList
   }
