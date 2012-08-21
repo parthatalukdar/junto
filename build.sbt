@@ -15,7 +15,6 @@ retrieveManaged := true
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 libraryDependencies ++= Seq(
-//  "se.scalablesolutions.akka" % "akka-actor" % "1.2",
   "com.typesafe.akka" % "akka-actor" % "2.0.3",
   "org.clapper" %% "argot" % "0.4",
   "net.sf.trove4j" % "trove4j" % "3.0.3",
