@@ -1,3 +1,11 @@
+v 1.2.3
+-------
+ - Updated to SBT 0.11.2. (Baldridge)
+ - Updated to Akka 2.0.3 (Baldridge)
+ - Updated other dependencies (trove, argot) (Baldridge)
+ - minor change to build setup - now use bin/build rather than "junto build" (Baldridge)
+
+
 v 1.2.2
 -------
  - Updated to SBT 0.11.1. (Baldridge)

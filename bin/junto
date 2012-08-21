@@ -27,7 +27,6 @@ help()
 cat <<EOF
 Junto 1.2.x commands: 
 
-  build         build Junto with SBT
   config  	run Junto on the specified config file
   extract       extract distributions from Junto output
   run           run the main method of a given class
@@ -36,27 +35,17 @@ Include --help with any option for more information
 EOF
 }
 
-if [ $CMD = 'build' ]; then
+CLASS=
 
-    if test -f ~/.sbtconfig; then
-	. ~/.sbtconfig
-    fi
-    java -Dfile.encoding=UTF8 -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256m ${SBT_OPTS} -jar $JUNTO_DIR/bin/sbt-launch-*.jar "$@"
+case $CMD in
+    config) CLASS=upenn.junto.app.JuntoConfigRunner;;
+    extract) CLASS=upenn.junto.app.OutputExtractor;;
+    run) CLASS=$1; shift;;
+    help) help; exit 1;;
+    *) echo "Unrecognized command: $CMD"; help; exit 1;;
+esac
 
-else 
+$JAVA_COMMAND $CLASS $*
 
-    CLASS=
-
-    case $CMD in
-	config) CLASS=upenn.junto.app.JuntoConfigRunner;;
-	extract) CLASS=upenn.junto.app.OutputExtractor;;
-	run) CLASS=$1; shift;;
-	help) help; exit 1;;
-	*) echo "Unrecognized command: $CMD"; help; exit 1;;
-    esac
-
-    $JAVA_COMMAND $CLASS $*
-
-fi
 
 

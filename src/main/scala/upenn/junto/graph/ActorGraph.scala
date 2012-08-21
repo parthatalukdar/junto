@@ -1,7 +1,6 @@
 package upenn.junto.graph
 
-import akka.actor.{Actor, ActorRef, PoisonPill}
-import Actor._
+import akka.actor._
 import scala.collection.JavaConversions._
 
 import gnu.trove.map.hash.TObjectDoubleHashMap
@@ -40,8 +39,9 @@ object MadGraphRunner {
    * vertices and start the work.
    */
   def apply (graph: Graph, mu1: Double, mu2: Double, mu3: Double, maxIters: Int) {
-    val clock = actorOf(new Clock(maxIters)).start
-    val madGraph = actorOf(new MadGraph(clock, graph, mu1, mu2, mu3)).start
+    val system = ActorSystem("MadRunner")
+    val clock = system.actorOf(Props(new Clock(maxIters)), name="clock")
+    val madGraph = system.actorOf(Props(new MadGraph(clock, graph, mu1, mu2, mu3)), name="graph")
     madGraph ! NextStep
   }
 
@@ -59,21 +59,24 @@ object MadGraphRunner {
     AdsorptionHelper.prepareGraph(graph)
 
     val namesToActorVertices: Map[String, ActorRef] = 
-      graph.vertices.values.toIndexedSeq.map {
-        v: Vertex => {
+      graph
+        .vertices
+        .values
+        .toIndexedSeq
+        .zipWithIndex
+        .map { case(v, index) => {
           v.SetInjectedLabelScore(Constants.GetDummyLabel, 0.0)
-          val vertexActorRef = actorOf(
-            new MadVertex(self, v.name, v.pinject, v.pcontinue, v.pabandon,
+          val vertexActorRef = context.actorOf(
+            Props(new MadVertex(self, v.name, v.pinject, v.pcontinue, v.pabandon,
                           mu1, mu2, mu3, v.neighbors.size,
                           normalizationConstants.get(v.name),
                           TroveToScalaMap(v.injectedLabels), 
                           TroveToScalaMap(v.estimatedLabels),
                           v.isTestNode, 
-                          TroveToScalaMap(v.goldLabels)))
-          vertexActorRef.start
+                          TroveToScalaMap(v.goldLabels))), name = "vertex"+index)
           (v.name, vertexActorRef)
-        }
-      }.toMap
+        }}
+        .toMap
 
     namesToActorVertices.foreach {
       case(vName, vertexActorRef) => {
@@ -121,7 +124,7 @@ object MadGraphRunner {
       // Tell all the vertices to stop and then stop itself.
       case Stop => 
         vertices.foreach(vertex => vertex ! PoisonPill)
-        self.stop()
+        context.system.shutdown
 
     }
 
@@ -239,7 +242,7 @@ object MadGraphRunner {
         println("Step: " + currentStep)
         if (currentStep == maxSteps) {
           worker ! Stop
-          self.stop()
+          context.stop(self)
         } else {
           worker ! NextStep
         }

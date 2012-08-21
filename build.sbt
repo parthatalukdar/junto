@@ -1,12 +1,12 @@
 import AssemblyKeys._
 
-name := "Junto"
+name := "junto"
 
-version := "1.2.2"
+version := "1.2.3"
 
 organization := "None"
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.9.2"
 
 crossPaths := false
 
@@ -15,9 +15,10 @@ retrieveManaged := true
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 libraryDependencies ++= Seq(
-  "se.scalablesolutions.akka" % "akka-actor" % "1.2",
-  "org.clapper" %% "argot" % "0.3.5",
-  "net.sf.trove4j" % "trove4j" % "3.0.2",
+//  "se.scalablesolutions.akka" % "akka-actor" % "1.2",
+  "com.typesafe.akka" % "akka-actor" % "2.0.3",
+  "org.clapper" %% "argot" % "0.4",
+  "net.sf.trove4j" % "trove4j" % "3.0.3",
   "commons-logging" % "commons-logging" % "1.1.1",
   "log4j" % "log4j" % "1.2.16"
 )
