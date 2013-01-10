@@ -6,18 +6,13 @@ import upenn.junto.graph._
 import upenn.junto.util.CollectionUtil
 import upenn.junto.util.Constants
 import upenn.junto.util.ProbUtil
-
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.Iterator
-
 import gnu.trove.map.hash.TObjectDoubleHashMap
 import gnu.trove.iterator.TObjectDoubleIterator
-
-import org.apache.commons.logging.Log
-import org.apache.commons.logging.LogFactory
-
 import scala.collection.JavaConversions._
+import com.typesafe.scalalogging.log4j.Logging
 
 /**
  * Class for MAD algorithm, providing MAD specific implementation details
@@ -130,7 +125,8 @@ object AdsorptionHelper {
  * Parent class for Adsorption algorithms.
  */
 abstract class Adsorption (g: Graph, keepTopKLabels: Int, mu1: Double, mu2: Double, mu3: Double)
-extends LabelPropagationAlgorithm(g) {
+extends LabelPropagationAlgorithm(g) 
+with Logging {
 
   // Normalization is needed only for the original Adsorption
   // algorithm.  After normalization, we have the weighted
@@ -147,7 +143,7 @@ extends LabelPropagationAlgorithm(g) {
     AdsorptionHelper.prepareGraph(g)
 		
     if (verbose)
-      Adsorption.LOG.info(
+      logger.info(
               "after_iteration " + 0 + 
               " objective: " + getGraphObjective +
               " precision: " + GraphEval.GetAccuracy(g) +
@@ -155,9 +151,9 @@ extends LabelPropagationAlgorithm(g) {
               " mrr_train: " + GraphEval.GetAverageTrainMRR(g) +
               " mrr_test: " + GraphEval.GetAverageTestMRR(g))
 
-    Adsorption.LOG.info("Iteration:")
+    logger.info("Iteration:")
     for (iter <- 1 to maxIter) {
-      Adsorption.LOG.info(" " + iter)
+      logger.info(" " + iter)
 			
       val startTime = System.currentTimeMillis
 
@@ -175,7 +171,7 @@ extends LabelPropagationAlgorithm(g) {
           val mult = getMultiplier(vName, v, neighName, neigh)
 
           if (verbose)
-            Adsorption.LOG.info(v.name + " " + v.pcontinue + " " +
+            logger.info(v.name + " " + v.pcontinue + " " +
                     v.GetNeighborWeight(neighName) + " " +
                     neigh.pcontinue + " " + neigh.GetNeighborWeight(vName))
 
@@ -187,18 +183,18 @@ extends LabelPropagationAlgorithm(g) {
         }
 				
         if (verbose)
-          Adsorption.LOG.info("Before norm: " + v.name + " " + ProbUtil.GetSum(vertexNewDist))
+          logger.info("Before norm: " + v.name + " " + ProbUtil.GetSum(vertexNewDist))
 
         normalizeIfNecessary(vertexNewDist)
 								
         if (verbose) 
-          Adsorption.LOG.info("After norm: " + v.name + " " + ProbUtil.GetSum(vertexNewDist))
+          logger.info("After norm: " + v.name + " " + ProbUtil.GetSum(vertexNewDist))
 				
         // add injection probability
         ProbUtil.AddScores(vertexNewDist, v.pinject * mu1, v.injectedLabels)
 	
         if (verbose)
-          Adsorption.LOG.info(iter + " after_inj " + v.name + " " +
+          logger.info(iter + " after_inj " + v.name + " " +
                   ProbUtil.GetSum(vertexNewDist) + 
                   " " + CollectionUtil.Map2String(vertexNewDist) +
                   " mu1: " + mu1)
@@ -209,7 +205,7 @@ extends LabelPropagationAlgorithm(g) {
                            Constants.GetDummyLabelDist)
 				
         if (verbose)
-          Adsorption.LOG.info(
+          logger.info(
                   iter + " after_dummy " + v.name + " " +
                   ProbUtil.GetSum(vertexNewDist) + " " +
                   CollectionUtil.Map2String(vertexNewDist) +
@@ -280,7 +276,7 @@ extends LabelPropagationAlgorithm(g) {
       resultList.add(res)
 
       if (verbose)
-        Adsorption.LOG.info(
+        logger.info(
                 "after_iteration " + iter +
                 " objective: " + getGraphObjective +
                 " accuracy: " + res(Constants.GetPrecisionString) +
@@ -293,7 +289,7 @@ extends LabelPropagationAlgorithm(g) {
                 " entity_updates: " + totalEntityUpdates + "\n")
 			
     }
-    Adsorption.LOG.info("")
+    logger.info("")
 		
   }
 	
@@ -322,8 +318,4 @@ extends LabelPropagationAlgorithm(g) {
     seedObjective + neighObjective + dummyObjective
   }
 
-}
-
-object Adsorption {
-  val LOG = LogFactory.getLog(classOf[Adsorption])
 }
