@@ -1,31 +1,26 @@
 package upenn.junto.util;
 
-import gnu.trove.map.hash.TObjectIntHashMap;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
-import upenn.junto.config.*;
-import upenn.junto.graph.*;
-import upenn.junto.util.MessagePrinter;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jgrapht.GraphPath;
+import org.jgrapht.alg.KShortestPaths;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.alg.StrongConnectivityInspector;
-import org.jgrapht.alg.KShortestPaths;
+
+import upenn.junto.config.ConfigReader;
+import upenn.junto.config.GraphConfigLoader;
+import upenn.junto.graph.Graph;
+import upenn.junto.graph.Vertex;
 
 public class GraphStats {
-    private static Log LOG = LogFactory.getLog(GraphStats.class);
+	private static Logger logger = LogManager.getLogger(GraphStats.class);
     
   // Number of K-shortest paths generated. 
   private static int _kPrime = -1;
@@ -97,7 +92,7 @@ public class GraphStats {
 			
       ++totalProcessed;
       if (totalProcessed % 1000 == 0) {
-        LOG.info("Processed: " + totalProcessed + " curr_dia: " + diameter);
+        logger.info("Processed: " + totalProcessed + " curr_dia: " + diameter);
       }
 			
       KShortestPaths<Vertex,DefaultWeightedEdge> ksp = new KShortestPaths(g, v, 1);

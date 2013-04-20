@@ -3,24 +3,13 @@ package upenn.junto.util;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Hashtable;
-import java.util.Iterator;
 
-import upenn.junto.util.ObjectDoublePair;
-import upenn.junto.util.RyanAlphabet;
-
-import gnu.trove.map.hash.TObjectDoubleHashMap;
-import gnu.trove.iterator.TObjectDoubleIterator;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class IoUtil {
-    private static Log LOG = LogFactory.getLog(IoUtil.class);
+    private static Logger logger = LogManager.getLogger(IoUtil.class);
 
   public static ArrayList<String> LoadFile(String fileName) {
     ArrayList<String> retList = new ArrayList<String>();
@@ -37,7 +26,7 @@ public class IoUtil {
       throw new RuntimeException(ioe);
     }
 		
-    LOG.info("Total " + retList.size() +
+    logger.info("Total " + retList.size() +
                          " entries loaded from " + fileName);
     return (retList);
   }
@@ -58,7 +47,7 @@ public class IoUtil {
         throw new RuntimeException(ioe);
     }
 		
-    LOG.info("Total " + retList.size() +
+    logger.info("Total " + retList.size() +
                          " entries loaded from " + fileName);
     return (retList);
   }
@@ -78,7 +67,7 @@ public class IoUtil {
         throw new RuntimeException(ioe);
     }
 
-    LOG.info("Total " + retAlpha.size() +
+    logger.info("Total " + retAlpha.size() +
                          " entries loaded from " + fileName);
     return (retAlpha);
   }

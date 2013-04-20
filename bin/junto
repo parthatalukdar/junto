@@ -1,7 +1,7 @@
 #!/bin/bash
 
 JARS=`echo $JUNTO_DIR/lib/*.jar $JUNTO_DIR/target/*.jar $JUNTO_DIR/lib_managed/compile/*.jar | tr ' ' ':'`
-SCALA_LIB="$HOME/.sbt/boot/scala-2.9.2/lib/scala-library.jar"
+SCALA_LIB="$HOME/.sbt/boot/scala-2.10.0/lib/scala-library.jar"
 
 JARS_MANAGED=
 if [ -e $JUNTO_DIR/lib_managed ]
@@ -25,7 +25,7 @@ shift
 help()
 {
 cat <<EOF
-Junto 1.2.x commands: 
+Junto 1.5.x commands: 
 
   config  	run Junto on the specified config file
   extract       extract distributions from Junto output

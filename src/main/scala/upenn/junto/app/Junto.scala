@@ -22,15 +22,12 @@ import upenn.junto.algorithm._
 import upenn.junto.config._
 import upenn.junto.graph._
 import upenn.junto.util._
-
-import org.apache.commons.logging.Log
-import org.apache.commons.logging.LogFactory
+import com.typesafe.scalalogging.log4j.Logging
 
 /**
  * Run Junto as an API call. To construct a graph, use upenn.junto.config.GraphBuilder.
  */
-object JuntoRunner {
-  val LOG = LogFactory.getLog(JuntoRunner.getClass)
+object JuntoRunner extends Logging {
 
   def apply (graph: Graph) {
     apply(graph, 1.0, .01, .01, 10, false)
@@ -50,7 +47,7 @@ object JuntoRunner {
     // Change this to true to try the (still preliminary) actor implementation.
     val useActors = false
     if (useActors) {
-      LOG.info("Using actor-based MAD...\n")
+      logger.info("Using actor-based MAD...\n")
       MadGraphRunner(graph, mu1, mu2, mu3, maxIters)
 
     } else {
@@ -58,15 +55,15 @@ object JuntoRunner {
       val propagator = algo match {
         
         case "adsorption" =>
-          LOG.info("Using " + algo + " ...\n")
+          logger.info("Using " + algo + " ...\n")
         new OriginalAdsorption(graph, keepTopKLabels, mu1, mu2, mu3)
         
         case "mad" =>
-          LOG.info("Using " + algo + " ...\n")
+          logger.info("Using " + algo + " ...\n")
         new ModifiedAdsorption(graph, keepTopKLabels, mu1, mu2, mu3)
         
         case "lp_zgl" =>
-          LOG.info("Using Label Propagation (ZGL) ...\n")
+          logger.info("Using Label Propagation (ZGL) ...\n")
         new LpZgl(graph, mu2, keepTopKLabels)
         
         case _ => throw new RuntimeException("Unknown algorithm: " + algo)
@@ -76,8 +73,8 @@ object JuntoRunner {
       
       if (resultList.size > 0) {
         val res = resultList.get(resultList.size - 1)
-        LOG.info(Constants.GetPrecisionString + " " + res(Constants.GetPrecisionString))
-        LOG.info(Constants.GetMRRString + " " + res(Constants.GetMRRString))
+        logger.info(Constants.GetPrecisionString + " " + res(Constants.GetPrecisionString))
+        logger.info(Constants.GetMRRString + " " + res(Constants.GetMRRString))
       }
 
     }
@@ -89,14 +86,13 @@ object JuntoRunner {
 /**
  * Run Junto using a config file.
  */
-object JuntoConfigRunner {
-  val LOG = LogFactory.getLog(JuntoConfigRunner.getClass)
+object JuntoConfigRunner extends Logging {
 
   def apply (config: Hashtable[String,String], 
              resultList: ArrayList[Map[String, Double]]) = {
 
     // pretty print the configs
-    LOG.info(CollectionUtil.Map2StringPrettyPrint(config))
+    logger.info(CollectionUtil.Map2StringPrettyPrint(config))
 		
     // load the graph
     val graph = GraphConfigLoader(config)
@@ -112,7 +108,7 @@ object JuntoConfigRunner {
     val mu3 = Defaults.GetValueOrDefault(config.get("mu3"), 1.0)
     val keepTopKLabels =
       Defaults.GetValueOrDefault(config.get("keep_top_k_labels"), Integer.MAX_VALUE)
-    LOG.info("Using keep_top_k_labels value: " + keepTopKLabels)
+    logger.info("Using keep_top_k_labels value: " + keepTopKLabels)
 		
     // this flag should be set to false (the default), unless you really
     // know what you are doing

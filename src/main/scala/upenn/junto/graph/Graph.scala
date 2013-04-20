@@ -2,17 +2,12 @@ package upenn.junto.graph
 
 import gnu.trove.map.hash.TObjectDoubleHashMap
 import gnu.trove.iterator.TObjectDoubleIterator
-
 import java.util.{ArrayList,HashMap,Iterator}
-
 import upenn.junto.util._
-
 import scala.collection.JavaConversions._
+import com.typesafe.scalalogging.log4j.Logging
 
-import org.apache.commons.logging.Log
-import org.apache.commons.logging.LogFactory
-
-class Graph {
+class Graph extends Logging {
 
   val vertices = new HashMap[String, Vertex]
   val labels = new TObjectDoubleHashMap[String]
@@ -65,7 +60,7 @@ class Graph {
       }
     }
 		
-    Graph.LOG.info("Total nodes pruned: " + totalPruned)
+    logger.info("Total nodes pruned: " + totalPruned)
   }
 	
   // keep only K highest scoring neighbors
@@ -106,7 +101,7 @@ class Graph {
       }
     }
 		
-    Graph.LOG.info("Total edges: " + totalEdges)
+    logger.info("Total edges: " + totalEdges)
   }
 	
 
@@ -157,7 +152,7 @@ class Graph {
       val fields = line.split("\t")
       assert (fields.length == 3)
 				
-      Graph.LOG.info(line)
+      logger.info(line)
       val v = vertices.get(fields(0))
       if (v != null)
         v.setGoldLabel(fields(1), fields(2).toDouble)
@@ -174,21 +169,15 @@ class Graph {
       if (isZeroEntropy)
         totalZeroEntropyNeighborhoodNodes += 1
     }
-    Graph.LOG.info("ZERO ENTROPY NEIGHBORHOOD Heuristic adjustment used for " +
+    logger.info("ZERO ENTROPY NEIGHBORHOOD Heuristic adjustment used for " +
                          totalZeroEntropyNeighborhoodNodes + " nodes!")
   }
 	
 }
 
-object Graph {
-  val LOG = LogFactory.getLog(classOf[Graph])
-}
-
-object GraphIo {
+object GraphIo extends Logging {
   import java.io.{BufferedWriter,FileWriter}
   
-  val LOG = LogFactory.getLog(GraphIo.getClass)
-
   val kDelim_ = "\t" 
 
   def saveEstimatedScores (graph: Graph, outputFile: String) {
@@ -220,11 +209,11 @@ object GraphIo {
     // print summary result
     // assert (total_doc_cnt > 0)
     if (total_doc_cnt > 0) {
-      LOG.info("PRECISION " + correct_doc_cnt.toDouble / total_doc_cnt +
+      logger.info("PRECISION " + correct_doc_cnt.toDouble / total_doc_cnt +
                          " (" + correct_doc_cnt + " correct out of " + total_doc_cnt + ")")
-      LOG.info("MRR " + doc_mrr_sum.toDouble / total_doc_cnt)
+      logger.info("MRR " + doc_mrr_sum.toDouble / total_doc_cnt)
     } else {
-      LOG.info("Total test instances evaluated: " + total_doc_cnt)
+      logger.info("Total test instances evaluated: " + total_doc_cnt)
     }
     
   }

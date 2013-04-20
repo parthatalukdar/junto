@@ -1,21 +1,13 @@
 package upenn.junto.util;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import gnu.trove.iterator.TObjectDoubleIterator;
+import gnu.trove.map.hash.TObjectDoubleHashMap;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Iterator;
-
-import upenn.junto.util.ObjectDoublePair;
-import upenn.junto.util.RyanAlphabet;
-import upenn.junto.util.Constants;
-import upenn.junto.util.MessagePrinter;
-
-import gnu.trove.map.hash.TObjectDoubleHashMap;
-import gnu.trove.iterator.TObjectDoubleIterator;
 
 public class CollectionUtil {
 
