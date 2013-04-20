@@ -19,16 +19,14 @@ package upenn.junto.app
 import scala.io.Source
 import java.io._
 import org.clapper.argot._
-import org.apache.commons.logging.Log
-import org.apache.commons.logging.LogFactory
+import com.typesafe.scalalogging.log4j.Logging
 
 
 /** 
  * Read Junto output to get distributions for just words, and only
  * for labels that have higher probability than __DUMMY__.
  */
-object OutputExtractor {
-  val LOG = LogFactory.getLog(OutputExtractor.getClass)
+object OutputExtractor extends Logging {
 
   val NodeRE = """([^_]+)_(.+)""".r
 
@@ -53,7 +51,7 @@ object OutputExtractor {
    */
   def main(args: Array[String]) = {
     try { parser.parse(args) }
-    catch { case e: ArgotUsageException => LOG.info(e.message); sys.exit(0) }
+    catch { case e: ArgotUsageException => logger.info(e.message); sys.exit(0) }
 
     val typesToExtract = typeToExtractOption.value toSet
     val doAllNodeTypes = typesToExtract isEmpty
